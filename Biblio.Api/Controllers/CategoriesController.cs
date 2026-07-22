@@ -19,9 +19,41 @@ namespace Biblio.Api.Controllers
 
         // GET: api/categories
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategorieDto>>> GetCategories()
+        public async Task<ActionResult<IEnumerable<CategorieDto>>> GetCategories(
+            [FromQuery] string? recherche,
+            [FromQuery] string? trierPar,
+            [FromQuery] string? ordre,
+            [FromQuery] int page = 1,
+            [FromQuery] int taillePage = 10)
+            
+
         {
-            var categories = await _context.Categories
+            var query = _context.Categories
+                .AsQueryable();
+                
+                if (!string.IsNullOrWhiteSpace(recherche))
+                {
+                    query = query.Where(c => c.Nom.Contains(recherche));
+                }
+
+                bool decroissant = ordre?.Trim().ToLower() == "desc";
+
+                query = trierPar?.Trim().ToLower() switch
+                {
+                    "nom" => decroissant ? query.OrderByDescending(c => c.Nom) : query.OrderBy(c => c.Nom),
+                    "description" => decroissant ? query.OrderByDescending(c => c.Description) : query.OrderBy(c => c.Description),
+                    _ => query.OrderBy(c => c.Id) // tri par défaut si rien n'est précisé ou valeur inconnue
+                };
+
+                var totalElements = await query.CountAsync();
+
+                if (page < 1) page = 1;
+                if (taillePage < 1) taillePage = 10;
+
+
+            var categories = await query
+                .Skip((page - 1) * taillePage)
+                .Take(taillePage)
                 .Select(c => new CategorieDto
                 {
                     Id = c.Id,
@@ -30,7 +62,16 @@ namespace Biblio.Api.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(categories);
+                var resultat = new
+                {
+                     Page = page,
+                     TaillePage = taillePage,
+                     TotalElements = totalElements,
+                     TotalPages = (int)Math.Ceiling((double)totalElements / taillePage),
+                     Categories = categories
+                };
+
+            return Ok(resultat);
         }
 
         // GET: api/categories/5

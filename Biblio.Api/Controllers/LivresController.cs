@@ -19,11 +19,41 @@ namespace Biblio.Api.Controllers
 
         // GET: api/livres
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LivreDto>>> GetLivres()
+        public async Task<ActionResult<IEnumerable<LivreDto>>> GetLivres( 
+            [FromQuery] string? recherche,
+            [FromQuery] string? trierPar,
+            [FromQuery] string? ordre,
+            [FromQuery] int page = 1,
+            [FromQuery] int taillePage = 10)
         {
-            var livres = await _context.Livres
+            var query = _context.Livres
                 .Include(l => l.Auteur)
                 .Include(l => l.Categorie)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(recherche))
+            {
+                query = query.Where(l => l.Titre.Contains(recherche));
+            }
+
+            bool decroissant = ordre?.Trim().ToLower() == "desc";
+
+             query = trierPar?.Trim().ToLower() switch
+             {
+                 "titre" => decroissant ? query.OrderByDescending(l => l.Titre) : query.OrderBy(l => l.Titre),
+                 "datepublication" => decroissant ? query.OrderByDescending(l => l.DatePublication) : query.OrderBy(l => l.DatePublication),
+                 "nombrepages" => decroissant ? query.OrderByDescending(l => l.NombrePages) : query.OrderBy(l => l.NombrePages),
+                 _ => query.OrderBy(l => l.Id) // tri par défaut si rien n'est précisé ou valeur inconnue
+            };
+
+            var totalElements = await query.CountAsync();
+
+            if (page < 1) page = 1;
+            if (taillePage < 1) taillePage = 10;
+
+            var livres = await query
+                .Skip((page - 1) * taillePage)
+                .Take(taillePage)
                 .Select(l => new LivreDto
                 {
                     Id = l.Id,
@@ -37,8 +67,17 @@ namespace Biblio.Api.Controllers
                     CategorieNom = l.Categorie.Nom
                 })
                 .ToListAsync();
+            
+            var resultat = new
+            {
+                Page = page,
+                TaillePage = taillePage,
+                TotalElements = totalElements,
+                totalPages = (int)Math.Ceiling((double)totalElements / taillePage),
+                Livres = livres
+            };
 
-            return Ok(livres);
+            return Ok(resultat);
         }
 
         // GET: api/livres/5

@@ -19,9 +19,41 @@ namespace Biblio.Api.Controllers
 
         // GET: api/auteurs
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AuteurDto>>> GetAuteurs()
+        public async Task<ActionResult<IEnumerable<AuteurDto>>> GetAuteurs(
+            [FromQuery] string? recherche,
+            [FromQuery] string? trierPar,
+            [FromQuery] string? ordre,
+            [FromQuery] int page = 1,
+            [FromQuery] int taillePage = 10)
+
         {
-            var auteurs = await _context.Auteurs
+            var query = _context.Auteurs
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(recherche))
+            {
+                query = query.Where(a => a.Nom.Contains(recherche) || a.Prenom.Contains(recherche));
+            }
+
+            bool decroissant = ordre?.Trim().ToLower() == "desc";
+
+            query = trierPar?.Trim().ToLower() switch
+            {
+                "nom" => decroissant ? query.OrderByDescending(a => a.Nom) : query.OrderBy(a => a.Nom),
+                "prenom" => decroissant ? query.OrderByDescending(a => a.Prenom) : query.OrderBy(a => a.Prenom),
+                "datenaissance" => decroissant ? query.OrderByDescending(a => a.DateNaissance) : query.OrderBy(a => a.DateNaissance),
+                _ => query.OrderBy(c => c.Id) // tri par défaut si rien n'est précisé ou valeur inconnue
+            };
+
+            var totalElements = await query.CountAsync();
+
+            if (page < 1) page = 1;
+            if (taillePage < 1) taillePage = 10;
+
+
+            var auteurs = await query
+                .Skip((page - 1) * taillePage)
+                .Take(taillePage)
                 .Select(a => new AuteurDto
                 {
                     Id = a.Id,
@@ -31,13 +63,25 @@ namespace Biblio.Api.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(auteurs);
+            var resultat = new
+            {
+                Page = page,
+                TaillePage = taillePage,
+                TotalElements = totalElements,
+                TotalPages = (int)Math.Ceiling((double)totalElements / taillePage),
+                Auteurs = auteurs
+            };
+
+            return Ok(resultat);
         }
 
         // GET: api/auteurs/5
         [HttpGet("{id}")]
         public async Task<ActionResult<AuteurDto>> GetAuteur(int id)
         {
+
+            if (id == 999) throw new Exception("Test erreur volontaire");
+
             var auteur = await _context.Auteurs.FindAsync(id);
 
             if (auteur == null)

@@ -13,6 +13,27 @@ builder.Services.AddDbContext<BiblioDbContext>(options =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+
+        var exceptionHandlerFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        var exception = exceptionHandlerFeature?.Error;
+
+        var reponse = new
+        {
+            StatusCode = 500,
+            Message = "Une erreur interne est survenue. Veuillez réessayer plus tard.",
+            Detail = app.Environment.IsDevelopment() ? exception?.Message : null
+        };
+
+        await context.Response.WriteAsJsonAsync(reponse);
+    });
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
