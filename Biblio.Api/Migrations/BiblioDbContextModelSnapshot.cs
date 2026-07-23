@@ -57,6 +57,38 @@ namespace Biblio.Api.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("Biblio.Api.Models.Emprunt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateEmprunt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DateRetourEffective")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateRetourPrevue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Etat")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LivreId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Utilisateur")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LivreId");
+
+                    b.ToTable("Emprunts");
+                });
+
             modelBuilder.Entity("Biblio.Api.Models.Livre", b =>
                 {
                     b.Property<int>("Id")
@@ -76,6 +108,9 @@ namespace Biblio.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("NombreExemplaires")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("NombrePages")
                         .HasColumnType("INTEGER");
 
@@ -93,6 +128,17 @@ namespace Biblio.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Livres");
+                });
+
+            modelBuilder.Entity("Biblio.Api.Models.Emprunt", b =>
+                {
+                    b.HasOne("Biblio.Api.Models.Livre", "Livre")
+                        .WithMany("Emprunts")
+                        .HasForeignKey("LivreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Livre");
                 });
 
             modelBuilder.Entity("Biblio.Api.Models.Livre", b =>
@@ -122,6 +168,11 @@ namespace Biblio.Api.Migrations
             modelBuilder.Entity("Biblio.Api.Models.Categorie", b =>
                 {
                     b.Navigation("Livres");
+                });
+
+            modelBuilder.Entity("Biblio.Api.Models.Livre", b =>
+                {
+                    b.Navigation("Emprunts");
                 });
 #pragma warning restore 612, 618
         }

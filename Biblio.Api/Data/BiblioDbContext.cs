@@ -13,6 +13,7 @@ namespace Biblio.Api.Data
         public DbSet<Livre> Livres { get; set; }
         public DbSet<Auteur> Auteurs { get; set; }
         public DbSet<Categorie> Categories { get; set; }
+        public DbSet<Emprunt> Emprunts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +36,13 @@ namespace Biblio.Api.Data
                 .HasOne(l => l.Categorie)
                 .WithMany(c => c.Livres)
                 .HasForeignKey(l => l.CategorieId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relation Emprunt -> Livre (un livre peut avoir plusieurs emprunts)
+            modelBuilder.Entity<Emprunt>()
+                .HasOne(e => e.Livre)
+                .WithMany(l => l.Emprunts)
+                .HasForeignKey(e => e.LivreId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

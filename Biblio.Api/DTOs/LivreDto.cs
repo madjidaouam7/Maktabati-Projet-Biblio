@@ -10,12 +10,14 @@ namespace Biblio.Api.DTOs
         public string ISBN { get; set; } = string.Empty;
         public DateTime DatePublication { get; set; }
         public int NombrePages { get; set; }
+        public int NombreExemplaires { get; set; }
 
         public int AuteurId { get; set; }
         public string AuteurNomComplet { get; set; } = string.Empty;
 
         public int CategorieId { get; set; }
         public string CategorieNom { get; set; } = string.Empty;
+
     }
 
     // Ce que le client envoie pour créer un livre
@@ -35,16 +37,22 @@ namespace Biblio.Api.DTOs
         [Range(1, 10000, ErrorMessage = "Le nombre de pages doit être compris entre 1 et 10000.")]
         public int NombrePages { get; set; }
 
+        [Range(1, 10000, ErrorMessage = "Le nombre d'exemplaires doit être au moins 1.")]
+        public int NombreExemplaires { get; set; } 
+
+
         [Required(ErrorMessage = "L'auteur est obligatoire.")]
         public int AuteurId { get; set; }
 
         [Required(ErrorMessage = "La catégorie est obligatoire.")]
         public int CategorieId { get; set; }
+        
     }
 
     // Ce que le client envoie pour modifier un livre
     public class UpdateLivreDto
     {
+        
         [Required(ErrorMessage = "Le titre est obligatoire.")]
         [MaxLength(200, ErrorMessage = "Le titre ne peut pas dépasser 200 caractères.")]
         public string Titre { get; set; } = string.Empty;
@@ -59,10 +67,24 @@ namespace Biblio.Api.DTOs
         [Range(1, 10000, ErrorMessage = "Le nombre de pages doit être compris entre 1 et 10000.")]
         public int NombrePages { get; set; }
 
+        [Range(1, 10000, ErrorMessage = "Le nombre d'exemplaires doit être au moins 1.")]
+        public int NombreExemplaires { get; set; } 
+
         [Required(ErrorMessage = "L'auteur est obligatoire.")]
         public int AuteurId { get; set; }
 
         [Required(ErrorMessage = "La catégorie est obligatoire.")]
         public int CategorieId { get; set; }
+        
     }
+
+
+    public class LivreDisponibleDto
+{
+    public int Id { get; set; }
+    public string Titre { get; set; } = string.Empty;
+    public string AuteurNomComplet { get; set; } = string.Empty;
+    public int NombreExemplaires { get; set; }
+    public int NombreExemplairesDisponibles { get; set; }
+}
 }

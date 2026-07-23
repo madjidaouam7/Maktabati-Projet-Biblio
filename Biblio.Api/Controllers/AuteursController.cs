@@ -80,8 +80,6 @@ namespace Biblio.Api.Controllers
         public async Task<ActionResult<AuteurDto>> GetAuteur(int id)
         {
 
-            if (id == 999) throw new Exception("Test erreur volontaire");
-
             var auteur = await _context.Auteurs.FindAsync(id);
 
             if (auteur == null)

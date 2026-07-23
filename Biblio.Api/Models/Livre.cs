@@ -15,5 +15,8 @@ namespace Biblio.Api.Models
         // Clé étrangère + propriété de navigation vers Categorie
         public int CategorieId { get; set; }
         public Categorie Categorie { get; set; } = null!;
+        public int NombreExemplaires { get; set; } 
+
+        public ICollection<Emprunt> Emprunts { get; set; } = new List<Emprunt>();
     }
 }

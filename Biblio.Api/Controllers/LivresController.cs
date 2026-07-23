@@ -19,7 +19,7 @@ namespace Biblio.Api.Controllers
 
         // GET: api/livres
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LivreDto>>> GetLivres( 
+        public async Task<ActionResult<IEnumerable<LivreDto>>> GetLivres(
             [FromQuery] string? recherche,
             [FromQuery] string? trierPar,
             [FromQuery] string? ordre,
@@ -38,12 +38,12 @@ namespace Biblio.Api.Controllers
 
             bool decroissant = ordre?.Trim().ToLower() == "desc";
 
-             query = trierPar?.Trim().ToLower() switch
-             {
-                 "titre" => decroissant ? query.OrderByDescending(l => l.Titre) : query.OrderBy(l => l.Titre),
-                 "datepublication" => decroissant ? query.OrderByDescending(l => l.DatePublication) : query.OrderBy(l => l.DatePublication),
-                 "nombrepages" => decroissant ? query.OrderByDescending(l => l.NombrePages) : query.OrderBy(l => l.NombrePages),
-                 _ => query.OrderBy(l => l.Id) // tri par défaut si rien n'est précisé ou valeur inconnue
+            query = trierPar?.Trim().ToLower() switch
+            {
+                "titre" => decroissant ? query.OrderByDescending(l => l.Titre) : query.OrderBy(l => l.Titre),
+                "datepublication" => decroissant ? query.OrderByDescending(l => l.DatePublication) : query.OrderBy(l => l.DatePublication),
+                "nombrepages" => decroissant ? query.OrderByDescending(l => l.NombrePages) : query.OrderBy(l => l.NombrePages),
+                _ => query.OrderBy(l => l.Id) // tri par défaut si rien n'est précisé ou valeur inconnue
             };
 
             var totalElements = await query.CountAsync();
@@ -61,13 +61,14 @@ namespace Biblio.Api.Controllers
                     ISBN = l.ISBN,
                     DatePublication = l.DatePublication,
                     NombrePages = l.NombrePages,
+                    NombreExemplaires = l.NombreExemplaires,
                     AuteurId = l.AuteurId,
                     AuteurNomComplet = l.Auteur.Nom + " " + l.Auteur.Prenom,
                     CategorieId = l.CategorieId,
                     CategorieNom = l.Categorie.Nom
                 })
                 .ToListAsync();
-            
+
             var resultat = new
             {
                 Page = page,
@@ -101,6 +102,7 @@ namespace Biblio.Api.Controllers
                 ISBN = livre.ISBN,
                 DatePublication = livre.DatePublication,
                 NombrePages = livre.NombrePages,
+                NombreExemplaires = livre.NombreExemplaires,
                 AuteurId = livre.AuteurId,
                 AuteurNomComplet = livre.Auteur.Nom + " " + livre.Auteur.Prenom,
                 CategorieId = livre.CategorieId,
@@ -143,6 +145,7 @@ namespace Biblio.Api.Controllers
                 ISBN = createDto.ISBN,
                 DatePublication = createDto.DatePublication,
                 NombrePages = createDto.NombrePages,
+                NombreExemplaires = createDto.NombreExemplaires,
                 AuteurId = createDto.AuteurId,
                 CategorieId = createDto.CategorieId
             };
@@ -157,6 +160,7 @@ namespace Biblio.Api.Controllers
                 ISBN = livre.ISBN,
                 DatePublication = livre.DatePublication,
                 NombrePages = livre.NombrePages,
+                NombreExemplaires = livre.NombreExemplaires,
                 AuteurId = livre.AuteurId,
                 AuteurNomComplet = auteur.Nom + " " + auteur.Prenom,
                 CategorieId = livre.CategorieId,
@@ -205,6 +209,7 @@ namespace Biblio.Api.Controllers
             livre.ISBN = updateDto.ISBN;
             livre.DatePublication = updateDto.DatePublication;
             livre.NombrePages = updateDto.NombrePages;
+            livre.NombreExemplaires = updateDto.NombreExemplaires;
             livre.AuteurId = updateDto.AuteurId;
             livre.CategorieId = updateDto.CategorieId;
 
@@ -228,6 +233,31 @@ namespace Biblio.Api.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+
+
+        [HttpGet("disponibles")]
+        public async Task<ActionResult<IEnumerable<LivreDisponibleDto>>> GetLivresDisponibles()
+        {
+            var livres = await _context.Livres
+                .Include(l => l.Auteur)
+                .Include(l => l.Emprunts)
+                .ToListAsync();
+
+            var resultat = livres
+                .Select(l => new LivreDisponibleDto
+                {
+                    Id = l.Id,
+                    Titre = l.Titre,
+                    AuteurNomComplet = l.Auteur.Nom + " " + l.Auteur.Prenom,
+                    NombreExemplaires = l.NombreExemplaires,
+                    NombreExemplairesDisponibles = l.NombreExemplaires - l.Emprunts.Count(e => e.Etat == EtatEmprunt.EnCours)
+                })
+                .Where(dto => dto.NombreExemplairesDisponibles > 0)
+                .ToList();
+
+            return Ok(resultat);
         }
     }
 }
