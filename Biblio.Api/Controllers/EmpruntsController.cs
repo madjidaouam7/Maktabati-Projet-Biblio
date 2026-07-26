@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Biblio.Api.Data;
 using Biblio.Api.Models;
 using Biblio.Api.DTOs;
+using System.Security.Claims;
 
 namespace Biblio.Api.Controllers
 {
@@ -42,10 +43,20 @@ namespace Biblio.Api.Controllers
                 return BadRequest($"Tout les exemplaires du livre '{livre.Titre}' sont déja empruntés.");
             }
 
+
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+
             var emprunt = new Emprunt
             {
                 LivreId = createDto.LivreId,
-                Utilisateur = createDto.Utilisateur,
+                UtilisateurId = userId,
                 DateEmprunt = maintenant,
                 DateRetourPrevue = createDto.DateRetourPrevue,
                 DateRetourEffective = null,
@@ -60,7 +71,7 @@ namespace Biblio.Api.Controllers
                 Id = emprunt.Id,
                 LivreId = emprunt.LivreId,
                 LivreTitre = livre.Titre,
-                Utilisateur = emprunt.Utilisateur,
+                Utilisateur = userEmail,
                 DateEmprunt = emprunt.DateEmprunt,
                 DateRetourPrevue = emprunt.DateRetourPrevue,
                 DateRetourEffective = emprunt.DateRetourEffective,
@@ -98,15 +109,26 @@ namespace Biblio.Api.Controllers
         [HttpGet("actifs")]
         public async Task<ActionResult<IEnumerable<EmpruntDto>>> GetEmpruntsActifs()
         {
-            var emprunts = await _context.Emprunts
+            var query = _context.Emprunts
                 .Include(e => e.Livre)
+                .Include(e => e.Utilisateur)
                 .Where(e => e.Etat == EtatEmprunt.EnCours)
+                .AsQueryable();
+
+            if (!User.IsInRole("Admin") && !User.IsInRole("Bibliothecaire"))
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                query = query.Where(e => e.UtilisateurId == userId);
+            }
+
+
+            var emprunts = await query
                 .Select(e => new EmpruntDto
                 {
                     Id = e.Id,
                     LivreId = e.LivreId,
                     LivreTitre = e.Livre.Titre,
-                    Utilisateur = e.Utilisateur,
+                    Utilisateur = e.Utilisateur.Email!,
                     DateEmprunt = e.DateEmprunt,
                     DateRetourPrevue = e.DateRetourPrevue,
                     DateRetourEffective = e.DateRetourEffective,
@@ -121,15 +143,25 @@ namespace Biblio.Api.Controllers
         [HttpGet("historique")]
         public async Task<ActionResult<IEnumerable<EmpruntDto>>> GetHistorique()
         {
-            var emprunts = await _context.Emprunts
+            var query = _context.Emprunts
                 .Include(e => e.Livre)
+                .Include(e => e.Utilisateur)
+                .AsQueryable();
+
+            if (!User.IsInRole("Admin") && !User.IsInRole("Bibliothecaire"))
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                query = query.Where(e => e.UtilisateurId == userId);
+            }
+
+            var emprunts = await query
                 .OrderByDescending(e => e.DateEmprunt)
                 .Select(e => new EmpruntDto
                 {
                     Id = e.Id,
                     LivreId = e.LivreId,
                     LivreTitre = e.Livre.Titre,
-                    Utilisateur = e.Utilisateur,
+                    Utilisateur = e.Utilisateur.Email!,
                     DateEmprunt = e.DateEmprunt,
                     DateRetourPrevue = e.DateRetourPrevue,
                     DateRetourEffective = e.DateRetourEffective,
@@ -146,6 +178,7 @@ namespace Biblio.Api.Controllers
         {
             var emprunt = await _context.Emprunts
                 .Include(e => e.Livre)
+                .Include(e => e.Utilisateur)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (emprunt == null)
@@ -158,7 +191,7 @@ namespace Biblio.Api.Controllers
                 Id = emprunt.Id,
                 LivreId = emprunt.LivreId,
                 LivreTitre = emprunt.Livre.Titre,
-                Utilisateur = emprunt.Utilisateur,
+                Utilisateur = emprunt.Utilisateur.Email!,
                 DateEmprunt = emprunt.DateEmprunt,
                 DateRetourPrevue = emprunt.DateRetourPrevue,
                 DateRetourEffective = emprunt.DateRetourEffective,

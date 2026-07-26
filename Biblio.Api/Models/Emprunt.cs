@@ -7,7 +7,8 @@ namespace Biblio.Api.Models
         public int LivreId { get; set; }
         public Livre Livre { get; set; } = null!;
 
-        public string Utilisateur { get; set; } = string.Empty;
+        public string UtilisateurId { get; set; } = string.Empty;
+        public Utilisateur Utilisateur { get; set; } = null!;
 
         public DateTime DateEmprunt { get; set; }
         public DateTime DateRetourPrevue { get; set; }

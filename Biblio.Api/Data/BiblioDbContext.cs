@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Biblio.Api.Models;
 
 namespace Biblio.Api.Data
 {
-    public class BiblioDbContext : DbContext
+    public class BiblioDbContext : IdentityDbContext<Utilisateur>
     {
         public BiblioDbContext(DbContextOptions<BiblioDbContext> options)
             : base(options)
@@ -43,6 +44,13 @@ namespace Biblio.Api.Data
                 .HasOne(e => e.Livre)
                 .WithMany(l => l.Emprunts)
                 .HasForeignKey(e => e.LivreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relation Emprunt -> Utilisateur (un utilisateur peut avoir plusieurs emprunts)
+            modelBuilder.Entity<Emprunt>()
+                .HasOne(e => e.Utilisateur)
+                .WithMany()
+                .HasForeignKey(e => e.UtilisateurId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

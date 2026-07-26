@@ -21,10 +21,6 @@ namespace Biblio.Api.DTOs
         [Required(ErrorMessage = "Le livre est obligatoire.")]
         public int LivreId { get; set; }
 
-        [Required(ErrorMessage = "Le nom de l'utilisateur est obligatoire.")]
-        [MaxLength(100, ErrorMessage = "Le nom ne peut pas dépasser 100 caractères.")]
-        public string Utilisateur { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "La date de retour prévue est obligatoire.")]
         public DateTime DateRetourPrevue { get; set; }
     }

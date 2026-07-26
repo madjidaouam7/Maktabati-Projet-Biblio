@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Biblio.Api.Data;
 using Biblio.Api.Models;
 using Biblio.Api.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class LivresController : ControllerBase
     {
         private readonly BiblioDbContext _context;
@@ -114,6 +116,7 @@ namespace Biblio.Api.Controllers
 
         // POST: api/livres
         [HttpPost]
+        [Authorize(Roles = "Admin,Bibliothecaire")]  // surcharge la règle du Controller pour cette action précise
         public async Task<ActionResult<LivreDto>> CreateLivre(CreateLivreDto createDto)
         {
             var auteur = await _context.Auteurs.FindAsync(createDto.AuteurId);
@@ -172,6 +175,7 @@ namespace Biblio.Api.Controllers
 
         // PUT: api/livres/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Bibliothecaire")]
         public async Task<IActionResult> UpdateLivre(int id, UpdateLivreDto updateDto)
         {
             var livre = await _context.Livres.FindAsync(id);
@@ -220,6 +224,7 @@ namespace Biblio.Api.Controllers
 
         // DELETE: api/livres/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteLivre(int id)
         {
             var livre = await _context.Livres.FindAsync(id);
@@ -227,6 +232,12 @@ namespace Biblio.Api.Controllers
             if (livre == null)
             {
                 return NotFound($"Aucun livre trouvé avec l'id {id}.");
+            }
+
+            var aDesEmprunts = await _context.Emprunts.AnyAsync(e => e.LivreId == id);
+            if (aDesEmprunts)
+            {
+                return BadRequest($"Impossible de supprimer le livre'{livre.Titre}' : il possède un historique d'emprunts.");
             }
 
             _context.Livres.Remove(livre);
