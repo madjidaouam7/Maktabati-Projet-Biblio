@@ -1,0 +1,205 @@
+@page "/livres"
+@using Biblio.Web.Services
+@inject LivreService LivreService
+
+<PageTitle>Livres</PageTitle>
+
+<h1>Livres</h1>
+
+@if (messageErreur != null)
+{
+    <div class="alert alert-danger">@messageErreur</div>
+}
+
+<button class="btn btn-primary mb-3" @onclick="AfficherFormulaireCreation">
+    + Ajouter un livre
+</button>
+
+@if (afficherFormulaire)
+{
+    <div class="card p-3 mb-3">
+        <EditForm Model="livreEnCours" OnValidSubmit="EnregistrerLivre">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-2">
+                <label>Titre</label>
+                <InputText class="form-control" @bind-Value="livreEnCours.Titre" />
+            </div>
+
+            <div class="mb-2">
+                <label>ISBN</label>
+                <InputText class="form-control" @bind-Value="livreEnCours.ISBN" />
+            </div>
+
+            <div class="mb-2">
+                <label>Date de publication</label>
+                <InputDate class="form-control" @bind-Value="livreEnCours.DatePublication" />
+            </div>
+
+            <div class="mb-2">
+                <label>Nombre de pages</label>
+                <InputNumber class="form-control" @bind-Value="livreEnCours.NombrePages" />
+            </div>
+
+            <div class="mb-2">
+                <label>Nombre d'exemplaires</label>
+                <InputNumber class="form-control" @bind-Value="livreEnCours.NombreExemplaires" />
+            </div>
+
+            <div class="mb-2">
+                <label>Id Auteur</label>
+                <InputNumber class="form-control" @bind-Value="livreEnCours.AuteurId" />
+            </div>
+
+            <div class="mb-2">
+                <label>Id Catégorie</label>
+                <InputNumber class="form-control" @bind-Value="livreEnCours.CategorieId" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+            <button type="button" class="btn btn-secondary" @onclick="AnnulerFormulaire">Annuler</button>
+        </EditForm>
+    </div>
+}
+
+@if (livres == null)
+{
+    <p><em>Chargement...</em></p>
+}
+else if (!livres.Any())
+{
+    <p>Aucun livre trouvé.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Titre</th>
+                <th>Auteur</th>
+                <th>Catégorie</th>
+                <th>Pages</th>
+                <th>Exemplaires</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var livre in livres)
+            {
+                <tr>
+                    <td>@livre.Id</td>
+                    <td>@livre.Titre</td>
+                    <td>@livre.AuteurNomComplet</td>
+                    <td>@livre.CategorieNom</td>
+                    <td>@livre.NombrePages</td>
+                    <td>@livre.NombreExemplaires</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary"
+                                @onclick="() => AfficherFormulaireModification(livre.Id)">Modifier</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => SupprimerLivre(livre.Id)">Supprimer</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<LivreDto>? livres;
+    private bool afficherFormulaire = false;
+    private CreateLivreDto livreEnCours = new();
+    private string? messageErreur;
+    private int? idEnModification = null;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerLivres();
+    }
+
+    private async Task ChargerLivres()
+    {
+        livres = await LivreService.GetLivresAsync();
+    }
+
+    private void AfficherFormulaireCreation()
+    {
+        livreEnCours = new CreateLivreDto();
+        idEnModification = null;
+        messageErreur = null;
+        afficherFormulaire = true;
+    }
+
+    private void AnnulerFormulaire()
+    {
+        afficherFormulaire = false;
+    }
+
+    private async Task EnregistrerLivre()
+    {
+        (bool Succes, string? Erreur) resultat;
+
+        if (idEnModification.HasValue)
+        {
+            resultat = await LivreService.UpdateLivreAsync(idEnModification.Value, livreEnCours);
+        }
+        else
+        {
+            resultat = await LivreService.CreateLivreAsync(livreEnCours);
+        }
+
+        if (resultat.Succes)
+        {
+            afficherFormulaire = false;
+            await ChargerLivres();
+        }
+        else
+        {
+            messageErreur = resultat.Erreur;
+        }
+    }
+
+    private async Task SupprimerLivre(int id)
+    {
+        var (succes, erreur) = await LivreService.DeleteLivreAsync(id);
+
+        if (succes)
+        {
+            await ChargerLivres();
+        }
+        else
+        {
+            messageErreur = erreur;
+        }
+    }
+
+
+
+    private async Task AfficherFormulaireModification(int id)
+    {
+        var livre = await LivreService.GetLivreAsync(id);
+        if (livre == null)
+        {
+            messageErreur = "Livre introuvable.";
+            return;
+        }
+
+        livreEnCours = new CreateLivreDto
+        {
+            Titre = livre.Titre,
+            ISBN = livre.ISBN,
+            DatePublication = livre.DatePublication,
+            NombrePages = livre.NombrePages,
+            NombreExemplaires = livre.NombreExemplaires,
+            AuteurId = livre.AuteurId,
+            CategorieId = livre.CategorieId
+        };
+
+        idEnModification = id;
+        messageErreur = null;
+        afficherFormulaire = true;
+    }
+
+}

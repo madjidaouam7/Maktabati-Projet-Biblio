@@ -1,10 +1,18 @@
 using Biblio.Web.Components;
+using Biblio.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient("BiblioApi", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5117/");
+});
+
+builder.Services.AddScoped<LivreService>();
 
 var app = builder.Build();
 

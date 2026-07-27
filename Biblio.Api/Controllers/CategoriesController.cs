@@ -9,7 +9,7 @@ namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // s'applique par défaut à TOUTES les actions du Controller
+    //[Authorize] // s'applique par défaut à TOUTES les actions du Controller
     public class CategoriesController : ControllerBase
     {
         private readonly BiblioDbContext _context;
@@ -99,7 +99,7 @@ namespace Biblio.Api.Controllers
 
         // POST: api/categories
         [HttpPost]
-        [Authorize(Roles = "Admin,Bibliothecaire")]  // surcharge la règle du Controller pour cette action précise
+        //[Authorize(Roles = "Admin,Bibliothecaire")]  // surcharge la règle du Controller pour cette action précise
         public async Task<ActionResult<CategorieDto>> CreateCategorie(CreateCategorieDto createDto)
         {
             var categorie = new Categorie
@@ -123,7 +123,7 @@ namespace Biblio.Api.Controllers
 
         // PUT: api/categories/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Bibliothecaire")]
+        //[Authorize(Roles = "Admin,Bibliothecaire")]
         public async Task<IActionResult> UpdateCategorie(int id, UpdateCategorieDto updateDto)
         {
             var categorie = await _context.Categories.FindAsync(id);
@@ -143,7 +143,7 @@ namespace Biblio.Api.Controllers
 
         // DELETE: api/categories/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCategorie(int id)
         {
             var categorie = await _context.Categories.FindAsync(id);
