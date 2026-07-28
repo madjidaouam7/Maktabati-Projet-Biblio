@@ -1,0 +1,26 @@
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @ClasseCss alert-dismissible fade show" role="alert">
+        @Message
+        <button type="button" class="btn-close" @onclick="Fermer"></button>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public bool EstErreur { get; set; } = false;
+
+    [Parameter]
+    public EventCallback OnFermer { get; set; }
+
+    private string ClasseCss => EstErreur ? "alert-danger" : "alert-success";
+
+    private async Task Fermer()
+    {
+        Message = null;
+        await OnFermer.InvokeAsync();
+    }
+}

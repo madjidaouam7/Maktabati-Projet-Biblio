@@ -1,0 +1,51 @@
+@page "/login"
+@using Biblio.Web.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Connexion</PageTitle>
+
+<h1>Connexion</h1>
+
+@if (messageErreur != null)
+{
+    <div class="alert alert-danger">@messageErreur</div>
+}
+
+<div class="card p-3" style="max-width: 400px;">
+    <EditForm Model="loginModel" OnValidSubmit="SeConnecter">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-2">
+            <label>Email</label>
+            <InputText class="form-control" @bind-Value="loginModel.Email" />
+        </div>
+
+        <div class="mb-2">
+            <label>Mot de passe</label>
+            <InputText type="password" class="form-control" @bind-Value="loginModel.MotDePasse" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Se connecter</button>
+    </EditForm>
+</div>
+
+@code {
+    private LoginDto loginModel = new();
+    private string? messageErreur;
+
+    private async Task SeConnecter()
+    {
+        var (succes, erreur) = await AuthService.LoginAsync(loginModel.Email, loginModel.MotDePasse);
+
+        if (succes)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            messageErreur = "Email ou mot de passe incorrect.";
+        }
+    }
+}

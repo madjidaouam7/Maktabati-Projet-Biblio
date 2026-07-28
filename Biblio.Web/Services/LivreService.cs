@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
 
 namespace Biblio.Web.Services
 {
@@ -39,20 +40,33 @@ namespace Biblio.Web.Services
     public class LivreService
     {
         private readonly HttpClient _httpClient;
+        private readonly EtatAuthService _etatAuth;
 
-        public LivreService(IHttpClientFactory httpClientFactory)
+        public LivreService(IHttpClientFactory httpClientFactory, EtatAuthService etatAuth)
         {
             _httpClient = httpClientFactory.CreateClient("BiblioApi");
+            _etatAuth = etatAuth;
+        }
+
+        private void AjouterToken()
+        {
+            if (_etatAuth.EstConnecte)
+            {
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", _etatAuth.Token);
+            }
         }
 
         public async Task<List<LivreDto>> GetLivresAsync()
         {
+            AjouterToken();
             var reponse = await _httpClient.GetFromJsonAsync<LivresPagines>("api/livres");
             return reponse?.Livres ?? new List<LivreDto>();
         }
 
         public async Task<LivreDto?> GetLivreAsync(int id)
         {
+            AjouterToken();
             var reponse = await _httpClient.GetAsync($"api/livres/{id}");
             if (!reponse.IsSuccessStatusCode)
             {
@@ -63,6 +77,7 @@ namespace Biblio.Web.Services
 
         public async Task<(bool Succes, string? Erreur)> CreateLivreAsync(CreateLivreDto dto)
         {
+            AjouterToken();
             var reponse = await _httpClient.PostAsJsonAsync("api/livres", dto);
             if (reponse.IsSuccessStatusCode)
             {
@@ -74,6 +89,7 @@ namespace Biblio.Web.Services
 
         public async Task<(bool Succes, string? Erreur)> UpdateLivreAsync(int id, CreateLivreDto dto)
         {
+            AjouterToken();
             var reponse = await _httpClient.PutAsJsonAsync($"api/livres/{id}", dto);
             if (reponse.IsSuccessStatusCode)
             {
@@ -85,6 +101,7 @@ namespace Biblio.Web.Services
 
         public async Task<(bool Succes, string? Erreur)> DeleteLivreAsync(int id)
         {
+            AjouterToken();
             var reponse = await _httpClient.DeleteAsync($"api/livres/{id}");
             if (reponse.IsSuccessStatusCode)
             {

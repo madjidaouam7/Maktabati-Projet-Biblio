@@ -22,6 +22,7 @@ namespace Biblio.Api.Controllers
         [HttpPost("emprunter")]
         public async Task<ActionResult<EmpruntDto>> EmprunterLivre(CreateEmpruntDto createDto)
         {
+
             var maintenant = DateTime.Now;
 
             if (createDto.DateRetourPrevue < maintenant)
@@ -44,7 +45,7 @@ namespace Biblio.Api.Controllers
             }
 
 
-
+            
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {

@@ -102,7 +102,7 @@ namespace Biblio.Api.Controllers
 
         // POST: api/auteurs
         [HttpPost]
-        //[Authorize(Roles = "Admin,Bibliothecaire")]  // surcharge la règle du Controller pour cette action précise
+        [Authorize(Roles = "Admin,Bibliothecaire")]  // surcharge la règle du Controller pour cette action précise
         public async Task<ActionResult<AuteurDto>> CreateAuteur(CreateAuteurDto createDto)
         {
             var auteur = new Auteur
@@ -128,7 +128,7 @@ namespace Biblio.Api.Controllers
 
         // PUT: api/auteurs/5
         [HttpPut("{id}")]
-        //[Authorize(Roles = "Admin,Bibliothecaire")]
+        [Authorize(Roles = "Admin,Bibliothecaire")]
         public async Task<IActionResult> UpdateAuteur(int id, UpdateAuteurDto updateDto)
         {
             var auteur = await _context.Auteurs.FindAsync(id);
@@ -149,7 +149,7 @@ namespace Biblio.Api.Controllers
 
         // DELETE: api/auteurs/5
         [HttpDelete("{id}")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAuteur(int id)
         {
             var auteur = await _context.Auteurs.FindAsync(id);

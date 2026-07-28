@@ -1,0 +1,147 @@
+@page "/emprunts"
+@using Biblio.Web.Services
+@inject EmpruntService EmpruntService
+
+<PageTitle>Emprunts</PageTitle>
+
+<h1>Emprunts</h1>
+
+<Notification Message="@message" EstErreur="estErreur" OnFermer="@(() => message = null)" />
+
+<button class="btn btn-primary mb-3" @onclick="AfficherFormulaireCreation">
+    + Emprunter un livre
+</button>
+
+@if (afficherFormulaire)
+{
+    <div class="card p-3 mb-3">
+        <EditForm Model="empruntEnCours" OnValidSubmit="EnregistrerEmprunt">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-2">
+                <label>Id du livre</label>
+                <InputNumber class="form-control" @bind-Value="empruntEnCours.LivreId" />
+            </div>
+
+            <div class="mb-2">
+                <label>Date de retour prévue</label>
+                <InputDate class="form-control" @bind-Value="empruntEnCours.DateRetourPrevue" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Emprunter</button>
+            <button type="button" class="btn btn-secondary" @onclick="AnnulerFormulaire">Annuler</button>
+        </EditForm>
+    </div>
+}
+
+@if (emprunts == null)
+{
+    <p><em>Chargement...</em></p>
+}
+else if (!emprunts.Any())
+{
+    <p>Aucun emprunt trouvé.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Livre</th>
+                <th>Utilisateur</th>
+                <th>Date emprunt</th>
+                <th>Retour prévu</th>
+                <th>Retour effectif</th>
+                <th>Etat</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emprunt in emprunts)
+            {
+                <tr>
+                    <td>@emprunt.Id</td>
+                    <td>@emprunt.LivreTitre</td>
+                    <td>@emprunt.Utilisateur</td>
+                    <td>@emprunt.DateEmprunt.ToString("dd/MM/yyyy")</td>
+                    <td>@emprunt.DateRetourPrevue.ToString("dd/MM/yyyy")</td>
+                    <td>@(emprunt.DateRetourEffective?.ToString("dd/MM/yyyy") ?? "-")</td>
+                    <td>@emprunt.Etat</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @onclick="() => RetournerEmprunt(emprunt.Id)">Retourner</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<EmpruntDto>? emprunts;
+    private bool afficherFormulaire = false;
+    private CreateEmpruntDto empruntEnCours = new();
+    private string? messageErreur;
+    private string? message;
+    private bool estErreur;
+
+    private void AfficherMessage(string texte, bool erreur)
+    {
+        message = texte;
+        estErreur = erreur;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerEmprunts();
+    }
+
+    private async Task ChargerEmprunts()
+    {
+        emprunts = await EmpruntService.GetEmpruntsActifsAsync();
+    }
+
+    private void AfficherFormulaireCreation()
+    {
+        empruntEnCours = new CreateEmpruntDto();
+        messageErreur = null;
+        afficherFormulaire = true;
+    }
+
+    private void AnnulerFormulaire()
+    {
+        afficherFormulaire = false;
+    }
+
+    private async Task EnregistrerEmprunt()
+    {
+        var (succes, erreur) = await EmpruntService.CreateEmpruntAsync(empruntEnCours);
+
+        if (succes)
+        {
+            afficherFormulaire = false;
+            await ChargerEmprunts();
+            AfficherMessage("Emprunt enregistré avec succès !", false);
+        }
+        else
+        {
+            AfficherMessage(erreur ?? "Une erreur est survenue.", true);
+        }
+    }
+
+    private async Task RetournerEmprunt(int id)
+    {
+        var (succes, erreur) = await EmpruntService.RetournerLivreAsync(id);
+
+        if (succes)
+        {
+            await ChargerEmprunts();
+            AfficherMessage("Livre retourné avec succès !", false);
+        }
+        else
+        {
+            AfficherMessage(erreur ?? "Une erreur est survenue.", true);
+        }
+    }
+}

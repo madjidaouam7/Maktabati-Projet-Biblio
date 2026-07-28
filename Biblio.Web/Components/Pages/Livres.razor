@@ -6,10 +6,7 @@
 
 <h1>Livres</h1>
 
-@if (messageErreur != null)
-{
-    <div class="alert alert-danger">@messageErreur</div>
-}
+<Notification Message="@message" EstErreur="estErreur" OnFermer="@(() => message = null)" />
 
 <button class="btn btn-primary mb-3" @onclick="AfficherFormulaireCreation">
     + Ajouter un livre
@@ -112,6 +109,14 @@ else
     private CreateLivreDto livreEnCours = new();
     private string? messageErreur;
     private int? idEnModification = null;
+    private string? message;
+    private bool estErreur;
+
+    private void AfficherMessage(string texte, bool erreur)
+    {
+        message = texte;
+        estErreur = erreur;
+    }
 
 
     protected override async Task OnInitializedAsync()
@@ -154,10 +159,11 @@ else
         {
             afficherFormulaire = false;
             await ChargerLivres();
+            AfficherMessage(idEnModification.HasValue ? "Livre modifié avec succès !" : "Livre créé avec succès !", false);
         }
         else
         {
-            messageErreur = resultat.Erreur;
+            AfficherMessage(resultat.Erreur ?? "Une erreur est survenue.", true);
         }
     }
 
@@ -168,10 +174,11 @@ else
         if (succes)
         {
             await ChargerLivres();
+            AfficherMessage("Livre supprimé avec succès !", false);
         }
         else
         {
-            messageErreur = erreur;
+            AfficherMessage(erreur ?? "Une erreur est survenue.", true);
         }
     }
 

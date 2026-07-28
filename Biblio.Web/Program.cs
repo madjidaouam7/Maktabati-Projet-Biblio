@@ -7,12 +7,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddScoped<LivreService>();
+builder.Services.AddScoped<AuteurService>();
+builder.Services.AddScoped<CategorieService>();
+builder.Services.AddScoped<EmpruntService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<EtatAuthService>();
+
 builder.Services.AddHttpClient("BiblioApi", client =>
 {
     client.BaseAddress = new Uri("http://localhost:5117/");
 });
 
-builder.Services.AddScoped<LivreService>();
+
 
 var app = builder.Build();
 

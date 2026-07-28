@@ -1,0 +1,184 @@
+@page "/auteurs"
+@using Biblio.Web.Services
+@inject AuteurService AuteurService
+
+<PageTitle>Auteurs</PageTitle>
+
+<h1>Auteurs</h1>
+
+<Notification Message="@message" EstErreur="estErreur" OnFermer="@(() => message = null)" />
+
+<button class="btn btn-primary mb-3" @onclick="AfficherFormulaireCreation">
+    + Ajouter un auteur
+</button>
+
+@if (afficherFormulaire)
+{
+    <div class="card p-3 mb-3">
+        <EditForm Model="auteurEnCours" OnValidSubmit="EnregistrerAuteur">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-2">
+                <label>Nom</label>
+                <InputText class="form-control" @bind-Value="auteurEnCours.Nom" />
+            </div>
+
+            <div class="mb-2">
+                <label>Prénom</label>
+                <InputText class="form-control" @bind-Value="auteurEnCours.Prenom" />
+            </div>
+
+            <div class="mb-2">
+                <label>Date de naissance</label>
+                <InputDate class="form-control" @bind-Value="auteurEnCours.DateNaissance" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+            <button type="button" class="btn btn-secondary" @onclick="AnnulerFormulaire">Annuler</button>
+        </EditForm>
+    </div>
+}
+
+@if (auteurs == null)
+{
+    <p><em>Chargement...</em></p>
+}
+else if (!auteurs.Any())
+{
+    <p>Aucun auteur trouvé.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Date de naissance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var auteur in auteurs)
+            {
+                <tr>
+                    <td>@auteur.Id</td>
+                    <td>@auteur.Nom</td>
+                    <td>@auteur.Prenom</td>
+                    <td>@auteur.DateNaissance?.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary"
+                                @onclick="() => AfficherFormulaireModification(auteur.Id)">Modifier</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => SupprimerAuteur(auteur.Id)">Supprimer</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<AuteurDto>? auteurs;
+    private bool afficherFormulaire = false;
+    private CreateAuteurDto auteurEnCours = new();
+    private string? messageErreur;
+    private int? idEnModification = null;
+    private string? message;
+    private bool estErreur;
+
+    private void AfficherMessage(string texte, bool erreur)
+    {
+        message = texte;
+        estErreur = erreur;
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerAuteurs();
+    }
+
+    private async Task ChargerAuteurs()
+    {
+        auteurs = await AuteurService.GetAuteursAsync();
+    }
+
+    private void AfficherFormulaireCreation()
+    {
+        auteurEnCours = new CreateAuteurDto();
+        idEnModification = null;
+        messageErreur = null;
+        afficherFormulaire = true;
+    }
+
+    private void AnnulerFormulaire()
+    {
+        afficherFormulaire = false;
+    }
+
+    private async Task EnregistrerAuteur()
+    {
+        (bool Succes, string? Erreur) resultat;
+
+        if (idEnModification.HasValue)
+        {
+            resultat = await AuteurService.UpdateAuteurAsync(idEnModification.Value, auteurEnCours);
+        }
+        else
+        {
+            resultat = await AuteurService.CreateAuteurAsync(auteurEnCours);
+        }
+
+        if (resultat.Succes)
+        {
+            afficherFormulaire = false;
+            await ChargerAuteurs();
+            AfficherMessage(idEnModification.HasValue ? "Auteur modifié avec succès !" : "Auteur créé avec succès !", false);
+        }
+        else
+        {
+            AfficherMessage(resultat.Erreur ?? "Une erreur est survenue.", true);
+        }
+    }
+
+    private async Task SupprimerAuteur(int id)
+    {
+        var (succes, erreur) = await AuteurService.DeleteAuteurAsync(id);
+
+        if (succes)
+        {
+            await ChargerAuteurs();
+            AfficherMessage("Auteur supprimé avec succès !", false);
+        }
+        else
+        {
+            AfficherMessage(erreur ?? "Une erreur est survenue.", true);
+        }
+    }
+
+
+
+    private async Task AfficherFormulaireModification(int id)
+    {
+        var auteur = await AuteurService.GetAuteurAsync(id);
+        if (auteur == null)
+        {
+            messageErreur = "Auteur introuvable.";
+            return;
+        }
+
+        auteurEnCours = new CreateAuteurDto
+        {
+            Nom = auteur.Nom,
+            Prenom = auteur.Prenom,
+            DateNaissance = auteur.DateNaissance
+        };
+
+        idEnModification = id;
+        messageErreur = null;
+        afficherFormulaire = true;
+    }
+}
