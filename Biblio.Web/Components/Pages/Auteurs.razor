@@ -71,13 +71,45 @@ else
                     <td>
                         <button class="btn btn-sm btn-primary"
                                 @onclick="() => AfficherFormulaireModification(auteur.Id)">Modifier</button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => SupprimerAuteur(auteur.Id)">Supprimer</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => OuvrirConfirmationSuppression(auteur.Id, auteur.Nom)">Supprimer</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 }
+
+
+
+
+
+
+<!--Confirmation de suppression-->
+@if (afficherConfirmation)
+{
+    <div class="modal-overlay" @onclick="AnnulerConfirmation">
+        <div class="modal-container" @onclick:stopPropagation>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close" @onclick="AnnulerConfirmation"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Voulez-vous vraiment supprimer <strong>@nomAConfirmer</strong> ?</p>
+                    <p class="text-muted small">Cette action est irréversible.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="AnnulerConfirmation">Annuler</button>
+                    <button class="btn btn-danger" @onclick="ConfirmerSuppression">Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
 
 @code {
     private List<AuteurDto>? auteurs;
@@ -87,6 +119,9 @@ else
     private int? idEnModification = null;
     private string? message;
     private bool estErreur;
+    private bool afficherConfirmation = false;
+    private int idAConfirmer = 0;
+    private string nomAConfirmer = "";
 
     private void AfficherMessage(string texte, bool erreur)
     {
@@ -180,5 +215,44 @@ else
         idEnModification = id;
         messageErreur = null;
         afficherFormulaire = true;
+    }
+
+
+
+
+
+
+
+
+    <!--Confirmation de suppression-->
+    private void OuvrirConfirmationSuppression(int id, string nom)
+    {
+        idAConfirmer = id;
+        nomAConfirmer = nom;
+        afficherConfirmation = true;
+    }
+
+    private void AnnulerConfirmation()
+    {
+        afficherConfirmation = false;
+        idAConfirmer = 0;
+        nomAConfirmer = "";
+    }
+
+    private async Task ConfirmerSuppression()
+    {
+        afficherConfirmation = false;
+        var (succes, erreur) = await AuteurService.DeleteAuteurAsync(idAConfirmer);
+        if (succes)
+        {
+            await ChargerAuteurs();
+            AfficherMessage($"Auteur \"{nomAConfirmer}\" supprimé.", false);
+        }
+        else
+        {
+            AfficherMessage(erreur ?? "Une erreur est survenue.", true);
+        }
+        idAConfirmer = 0;
+        nomAConfirmer = "";
     }
 }
