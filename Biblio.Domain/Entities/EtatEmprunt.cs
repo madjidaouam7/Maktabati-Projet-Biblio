@@ -1,4 +1,4 @@
-namespace Biblio.Api.Models
+namespace Biblio.Domain.Entities
 {
     public enum EtatEmprunt
     {

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Identity;
-using Biblio.Api.Models;
+using Biblio.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
-using Biblio.Api.Data;
+using Biblio.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Biblio.Application.Interfaces;
+using Biblio.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,6 +85,12 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtCle))
     };
 });
+
+
+builder.Services.AddScoped<ICategorieService, CategorieService>();
+builder.Services.AddScoped<IAuteurService, AuteurService>();
+builder.Services.AddScoped<ILivreService, LivreService>();
+builder.Services.AddScoped<IEmpruntService, EmpruntService>();
 
 
 var app = builder.Build();

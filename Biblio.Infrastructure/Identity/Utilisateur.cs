@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Biblio.Api.Models
+namespace Biblio.Infrastructure.Identity
 {
     public class Utilisateur : IdentityUser
     {

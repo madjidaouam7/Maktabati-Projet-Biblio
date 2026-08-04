@@ -4,7 +4,9 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Biblio.Api.Models;
+using Biblio.Domain.Entities;
+using Biblio.Infrastructure.Identity;
+using Biblio.Infrastructure.Data;
 using Biblio.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 

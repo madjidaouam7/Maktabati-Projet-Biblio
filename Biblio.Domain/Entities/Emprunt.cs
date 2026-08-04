@@ -1,4 +1,4 @@
-namespace Biblio.Api.Models
+namespace Biblio.Domain.Entities
 {
     public class Emprunt
     {
@@ -8,8 +8,9 @@ namespace Biblio.Api.Models
         public Livre Livre { get; set; } = null!;
 
         public string UtilisateurId { get; set; } = string.Empty;
-        public Utilisateur Utilisateur { get; set; } = null!;
 
+        //public Utilisateur Utilisateur { get; set; } = null!;
+        
         public DateTime DateEmprunt { get; set; }
         public DateTime DateRetourPrevue { get; set; }
         public DateTime? DateRetourEffective { get; set; }

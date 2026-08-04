@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Biblio.Api.Data;
-using Biblio.Api.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Biblio.Application.Interfaces;
+using Biblio.Infrastructure.Identity;
 using Biblio.Api.DTOs;
 using System.Security.Claims;
 
@@ -9,70 +11,43 @@ namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //Authorize]
     public class EmpruntsController : ControllerBase
     {
-        private readonly BiblioDbContext _context;
+        private readonly IEmpruntService _empruntService;
+        private readonly UserManager<Utilisateur> _userManager;
 
-        public EmpruntsController(BiblioDbContext context)
+        public EmpruntsController(IEmpruntService empruntService, UserManager<Utilisateur> userManager)
         {
-            _context = context;
+            _empruntService = empruntService;
+            _userManager = userManager;
         }
 
-        // POST: api/emprunts/emprunter
         [HttpPost("emprunter")]
         public async Task<ActionResult<EmpruntDto>> EmprunterLivre(CreateEmpruntDto createDto)
         {
-
-            var maintenant = DateTime.Now;
-
-            if (createDto.DateRetourPrevue < maintenant)
-            {
-                return BadRequest("La date de retour prévue doit être supérieure ou égale à la date d'emprunt.");
-            }
-
-            var livre = await _context.Livres.FindAsync(createDto.LivreId);
-            if (livre == null)
-            {
-                return BadRequest($"Aucun livre trouvé avec l'id {createDto.LivreId}.");
-            }
-
-            var NombreEmpruntsEnCours = await _context.Emprunts
-                .CountAsync(e => e.LivreId == createDto.LivreId && e.Etat == EtatEmprunt.EnCours);
-
-            if (NombreEmpruntsEnCours >= livre.NombreExemplaires)
-            {
-                return BadRequest($"Tout les exemplaires du livre '{livre.Titre}' sont déja empruntés.");
-            }
-
-
-            
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
                 return Unauthorized();
             }
 
-            var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+            var resultat = await _empruntService.EmprunterLivreAsync(createDto.LivreId, userId, createDto.DateRetourPrevue);
 
-            var emprunt = new Emprunt
+            if (!resultat.Succes)
             {
-                LivreId = createDto.LivreId,
-                UtilisateurId = userId,
-                DateEmprunt = maintenant,
-                DateRetourPrevue = createDto.DateRetourPrevue,
-                DateRetourEffective = null,
-                Etat = EtatEmprunt.EnCours
-            };
+                return BadRequest(resultat.Erreur);
+            }
 
-            _context.Emprunts.Add(emprunt);
-            await _context.SaveChangesAsync();
+            var utilisateur = await _userManager.FindByIdAsync(userId);
+            var emprunt = resultat.Emprunt!;
 
             var dto = new EmpruntDto
             {
                 Id = emprunt.Id,
                 LivreId = emprunt.LivreId,
-                LivreTitre = livre.Titre,
-                Utilisateur = userEmail,
+                LivreTitre = emprunt.Livre?.Titre ?? "",
+                Utilisateur = utilisateur?.Email ?? "Inconnu",
                 DateEmprunt = emprunt.DateEmprunt,
                 DateRetourPrevue = emprunt.DateRetourPrevue,
                 DateRetourEffective = emprunt.DateRetourEffective,
@@ -82,117 +57,64 @@ namespace Biblio.Api.Controllers
             return CreatedAtAction(nameof(GetEmprunt), new { id = emprunt.Id }, dto);
         }
 
-        // POST: api/emprunts/5/retourner
         [HttpPost("{id}/retourner")]
         public async Task<IActionResult> RetournerLivre(int id)
         {
-            var emprunt = await _context.Emprunts.FindAsync(id);
-
-            if (emprunt == null)
+            var (succes, erreur) = await _empruntService.RetournerLivreAsync(id);
+            if (!succes)
             {
-                return NotFound($"Aucun emprunt trouvé avec l'id {id}.");
+                return BadRequest(erreur);
             }
-
-            if (emprunt.Etat == EtatEmprunt.Retourne)
-            {
-                return BadRequest("Ce livre a déjà été retourné.");
-            }
-
-            emprunt.DateRetourEffective = DateTime.Now;
-            emprunt.Etat = EtatEmprunt.Retourne;
-
-            await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
-        // GET: api/emprunts/actifs
         [HttpGet("actifs")]
         public async Task<ActionResult<IEnumerable<EmpruntDto>>> GetEmpruntsActifs()
         {
-            var query = _context.Emprunts
-                .Include(e => e.Livre)
-                .Include(e => e.Utilisateur)
-                .Where(e => e.Etat == EtatEmprunt.EnCours)
-                .AsQueryable();
-
+            string? filtre = null;
             if (!User.IsInRole("Admin") && !User.IsInRole("Bibliothecaire"))
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                query = query.Where(e => e.UtilisateurId == userId);
+                filtre = User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
 
+            var emprunts = await _empruntService.GetEmpruntsActifsAsync(filtre);
+            var dto = await ConstruireDtos(emprunts);
 
-            var emprunts = await query
-                .Select(e => new EmpruntDto
-                {
-                    Id = e.Id,
-                    LivreId = e.LivreId,
-                    LivreTitre = e.Livre.Titre,
-                    Utilisateur = e.Utilisateur.Email!,
-                    DateEmprunt = e.DateEmprunt,
-                    DateRetourPrevue = e.DateRetourPrevue,
-                    DateRetourEffective = e.DateRetourEffective,
-                    Etat = e.Etat.ToString()
-                })
-                .ToListAsync();
-
-            return Ok(emprunts);
+            return Ok(dto);
         }
 
-        // GET: api/emprunts/historique
         [HttpGet("historique")]
         public async Task<ActionResult<IEnumerable<EmpruntDto>>> GetHistorique()
         {
-            var query = _context.Emprunts
-                .Include(e => e.Livre)
-                .Include(e => e.Utilisateur)
-                .AsQueryable();
-
+            string? filtre = null;
             if (!User.IsInRole("Admin") && !User.IsInRole("Bibliothecaire"))
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                query = query.Where(e => e.UtilisateurId == userId);
+                filtre = User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
 
-            var emprunts = await query
-                .OrderByDescending(e => e.DateEmprunt)
-                .Select(e => new EmpruntDto
-                {
-                    Id = e.Id,
-                    LivreId = e.LivreId,
-                    LivreTitre = e.Livre.Titre,
-                    Utilisateur = e.Utilisateur.Email!,
-                    DateEmprunt = e.DateEmprunt,
-                    DateRetourPrevue = e.DateRetourPrevue,
-                    DateRetourEffective = e.DateRetourEffective,
-                    Etat = e.Etat.ToString()
-                })
-                .ToListAsync();
+            var emprunts = await _empruntService.GetHistoriqueAsync(filtre);
+            var dto = await ConstruireDtos(emprunts);
 
-            return Ok(emprunts);
+            return Ok(dto);
         }
 
-        // GET: api/emprunts/5
         [HttpGet("{id}")]
         public async Task<ActionResult<EmpruntDto>> GetEmprunt(int id)
         {
-            var emprunt = await _context.Emprunts
-                .Include(e => e.Livre)
-                .Include(e => e.Utilisateur)
-                .FirstOrDefaultAsync(e => e.Id == id);
-
+            var emprunt = await _empruntService.GetEmpruntAsync(id);
             if (emprunt == null)
             {
                 return NotFound($"Aucun emprunt trouvé avec l'id {id}.");
             }
+
+            var utilisateur = await _userManager.FindByIdAsync(emprunt.UtilisateurId);
 
             var dto = new EmpruntDto
             {
                 Id = emprunt.Id,
                 LivreId = emprunt.LivreId,
                 LivreTitre = emprunt.Livre.Titre,
-                Utilisateur = emprunt.Utilisateur.Email!,
+                Utilisateur = utilisateur?.Email ?? "Inconnu",
                 DateEmprunt = emprunt.DateEmprunt,
                 DateRetourPrevue = emprunt.DateRetourPrevue,
                 DateRetourEffective = emprunt.DateRetourEffective,
@@ -200,6 +122,26 @@ namespace Biblio.Api.Controllers
             };
 
             return Ok(dto);
+        }
+
+        private async Task<List<EmpruntDto>> ConstruireDtos(List<Biblio.Domain.Entities.Emprunt> emprunts)
+        {
+            var utilisateurIds = emprunts.Select(e => e.UtilisateurId).Distinct().ToList();
+            var utilisateurs = await _userManager.Users
+                .Where(u => utilisateurIds.Contains(u.Id))
+                .ToListAsync();
+
+            return emprunts.Select(e => new EmpruntDto
+            {
+                Id = e.Id,
+                LivreId = e.LivreId,
+                LivreTitre = e.Livre.Titre,
+                Utilisateur = utilisateurs.FirstOrDefault(u => u.Id == e.UtilisateurId)?.Email ?? "Inconnu",
+                DateEmprunt = e.DateEmprunt,
+                DateRetourPrevue = e.DateRetourPrevue,
+                DateRetourEffective = e.DateRetourEffective,
+                Etat = e.Etat.ToString()
+            }).ToList();
         }
     }
 }
