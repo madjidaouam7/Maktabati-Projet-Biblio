@@ -1,3 +1,4 @@
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Biblio.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -5,8 +6,6 @@ using Biblio.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Biblio.Application.Interfaces;
-using Biblio.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,10 +86,11 @@ builder.Services.AddAuthentication(options =>
 });
 
 
-builder.Services.AddScoped<ICategorieService, CategorieService>();
-builder.Services.AddScoped<IAuteurService, AuteurService>();
-builder.Services.AddScoped<ILivreService, LivreService>();
-builder.Services.AddScoped<IEmpruntService, EmpruntService>();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(Biblio.Application.Features.Categories.Queries.GetCategoriesQuery).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Biblio.Infrastructure.Features.Categories.GetCategoriesQueryHandler).Assembly);
+});
 
 
 var app = builder.Build();

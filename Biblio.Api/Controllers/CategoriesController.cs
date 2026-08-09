@@ -1,10 +1,12 @@
+using MediatR;
+using Biblio.Application.Features.Categories.Queries;
+using Biblio.Application.Features.Categories.Commands;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Biblio.Infrastructure.Data;
 using Biblio.Domain.Entities;
 using Biblio.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using Biblio.Application.Interfaces;
 
 namespace Biblio.Api.Controllers
 {
@@ -13,11 +15,17 @@ namespace Biblio.Api.Controllers
     //[Authorize] // s'applique par défaut à TOUTES les actions du Controller
     public class CategoriesController : ControllerBase
     {
-        private readonly ICategorieService _categorieService;
+        //private readonly ICategorieService _categorieService;
+        private readonly IMediator _mediator;
 
-        public CategoriesController(ICategorieService categorieService)
+        /*public CategoriesController(ICategorieService categorieService)
         {
             _categorieService = categorieService;
+        }*/
+
+        public CategoriesController(IMediator mediator)
+        {
+            _mediator = mediator;
         }
 
         // GET: api/categories
@@ -28,11 +36,18 @@ namespace Biblio.Api.Controllers
             [FromQuery] string? ordre,
             [FromQuery] int page = 1,
             [FromQuery] int taillePage = 10)
-
-
         {
 
-            var (categories, total) = await _categorieService.GetCategoriesAsync(recherche, trierPar, ordre, page, taillePage);
+            var query = new GetCategoriesQuery
+            {
+                Recherche = recherche,
+                TrierPar = trierPar,
+                Ordre = ordre,
+                Page = page,
+                TaillePage = taillePage
+            };
+
+            var (categories, total) = await _mediator.Send(query);
 
             var dtos = categories
                 .Select(c => new CategorieDto
@@ -59,7 +74,12 @@ namespace Biblio.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<CategorieDto>> GetCategorie(int id)
         {
-            var categorie = await _categorieService.GetCategorieAsync(id);
+            var query = new GetCategorieByIdQuery
+            {
+                Id = id
+            };
+            
+            var categorie = await _mediator.Send(query);
 
             if (categorie == null)
             {
@@ -81,22 +101,22 @@ namespace Biblio.Api.Controllers
         [Authorize(Roles = "Admin,Bibliothecaire")]  // surcharge la règle du Controller pour cette action précise
         public async Task<ActionResult<CategorieDto>> CreateCategorie(CreateCategorieDto createDto)
         {
-            var categorie = new Categorie
+            var command = new CreateCategorieCommand
             {
                 Nom = createDto.Nom,
                 Description = createDto.Description
             };
 
-            var categorieCreee = await _categorieService.CreateCategorieAsync(categorie);
+            var categorie = await _mediator.Send(command);
 
             var dto = new CategorieDto
             {
-                Id = categorieCreee.Id,
-                Nom = categorieCreee.Nom,
-                Description = categorieCreee.Description
+                Id = categorie.Id,
+                Nom = categorie.Nom,
+                Description = categorie.Description
             };
 
-            return CreatedAtAction(nameof(GetCategorie), new { id = categorieCreee.Id }, dto);
+            return CreatedAtAction(nameof(GetCategorie), new { id = categorie.Id }, dto);
         }
 
         // PUT: api/categories/5
@@ -104,13 +124,14 @@ namespace Biblio.Api.Controllers
         [Authorize(Roles = "Admin,Bibliothecaire")]
         public async Task<IActionResult> UpdateCategorie(int id, UpdateCategorieDto updateDto)
         {
-            var categorie = new Categorie
+            var command = new UpdateCategorieCommand
             {
+                Id = id,
                 Nom = updateDto.Nom,
-                Description = updateDto.Description,
+                Description = updateDto.Description
             };
 
-            var succes = await _categorieService.UpdateCategorieAsync(id, categorie);
+            var succes = await _mediator.Send(command);
             if (!succes)
             {
                 return NotFound($"Aucune catégorie trouvée avec l'id {id}.");
@@ -124,7 +145,13 @@ namespace Biblio.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCategorie(int id)
         {
-            var succes = await _categorieService.DeleteCategorieAsync(id);
+            var command = new DeleteCategorieCommand
+            {
+                Id = id
+            };
+
+            var succes = await _mediator.Send(command);
+            
             if (!succes)
             {
                 return NotFound($"Aucune catégorie trouvée avec l'id {id}.");

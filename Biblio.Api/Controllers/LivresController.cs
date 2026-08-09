@@ -1,10 +1,12 @@
+using MediatR;
+using Biblio.Application.Features.Livres.Queries;
+using Biblio.Application.Features.Livres.Commands;
+using Microsoft.EntityFrameworkCore;    
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Biblio.Infrastructure.Data;
 using Biblio.Domain.Entities;
 using Biblio.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using Biblio.Application.Interfaces;
 
 namespace Biblio.Api.Controllers
 {
@@ -13,12 +15,17 @@ namespace Biblio.Api.Controllers
     //[Authorize]
     public class LivresController : ControllerBase
     {
-        private readonly BiblioDbContext _context;
-        private readonly ILivreService _livreService;
+        //private readonly ILivreService _livreService;
+        private readonly IMediator _mediator;
 
-        public LivresController(ILivreService livreService)
+        /*public LivresController(ILivreService livreService)
         {
             _livreService = livreService;
+        }*/
+
+        public LivresController(IMediator mediator)
+        {
+            _mediator = mediator;
         }
 
         // GET: api/livres
@@ -30,7 +37,16 @@ namespace Biblio.Api.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int taillePage = 10)
         {
-            var (livres, total) = await _livreService.GetLivresAsync(recherche, trierPar, ordre, page, taillePage);
+            var query = new GetLivresQuery
+            {
+                Recherche = recherche,
+                TrierPar = trierPar,
+                Ordre = ordre,
+                Page = page,
+                TaillePage = taillePage
+            };
+            
+            var (livres, total) = await _mediator.Send(query);
 
             var dtos = livres
                 .Select(l => new LivreDto
@@ -69,7 +85,12 @@ namespace Biblio.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<LivreDto>> GetLivre(int id)
         {
-            var livre = await _livreService.GetLivreAsync(id);
+            var query = new GetLivreByIdQuery
+            {
+                Id = id
+            };
+
+            var livre = await _mediator.Send(query);
 
             if (livre == null)
             {
@@ -102,7 +123,7 @@ namespace Biblio.Api.Controllers
         [Authorize(Roles = "Admin,Bibliothecaire")]  // surcharge la règle du Controller pour cette action précise
         public async Task<ActionResult<LivreDto>> CreateLivre(CreateLivreDto createDto)
         {
-            var livre = new Livre
+            var command = new CreateLivreCommand
             {
                 Titre = createDto.Titre,
                 ISBN = createDto.ISBN,
@@ -112,26 +133,29 @@ namespace Biblio.Api.Controllers
                 AuteurId = createDto.AuteurId,
                 CategorieId = createDto.CategorieId
             };
-
-            var resultat = await _livreService.CreateLivreAsync(livre);
+            
+            
+            var resultat = await _mediator.Send(command);
 
             if (!resultat.Succes)
             {
                 return BadRequest(resultat.Erreur);
             }
 
+            var livre = resultat.Livre!;
+
             var dto = new LivreDto
             {
-                Id = resultat.Livre.Id,
-                Titre = resultat.Livre.Titre,
-                ISBN = resultat.Livre.ISBN,
-                DatePublication = resultat.Livre.DatePublication,
-                NombrePages = resultat.Livre.NombrePages,
-                NombreExemplaires = resultat.Livre.NombreExemplaires,
-                AuteurId = resultat.Livre.AuteurId,
-                AuteurNomComplet = resultat.Livre.Auteur.Nom + " " + resultat.Livre.Auteur.Prenom,
-                CategorieId = resultat.Livre.CategorieId,
-                CategorieNom = resultat.Livre.Categorie.Nom
+                Id = livre.Id,
+                Titre = livre.Titre,
+                ISBN = livre.ISBN,
+                DatePublication = livre.DatePublication,
+                NombrePages = livre.NombrePages,
+                NombreExemplaires = livre.NombreExemplaires,
+                AuteurId = livre.AuteurId,
+                AuteurNomComplet = livre.Auteur.Nom + " " + livre.Auteur.Prenom,
+                CategorieId = livre.CategorieId,
+                CategorieNom = livre.Categorie.Nom
             };
 
             return CreatedAtAction(nameof(GetLivre), new { id = livre.Id }, dto);
@@ -145,22 +169,23 @@ namespace Biblio.Api.Controllers
         [Authorize(Roles = "Admin,Bibliothecaire")]
         public async Task<IActionResult> UpdateLivre(int id, UpdateLivreDto updateDto)
         {
-            var livre = new Livre
+            var command = new UpdateLivreCommand
             {
+                Id = id,
                 Titre = updateDto.Titre,
                 ISBN = updateDto.ISBN,
                 DatePublication = updateDto.DatePublication,
                 NombrePages = updateDto.NombrePages,
-                NombreExemplaires = updateDto.NombreExemplaires,
                 AuteurId = updateDto.AuteurId,
-                CategorieId = updateDto.CategorieId
+                CategorieId = updateDto.CategorieId,
+                NombreExemplaires = updateDto.NombreExemplaires,
             };
 
-            var resultat = await _livreService.UpdateLivreAsync(id, livre);
+            var resultat = await _mediator.Send(command);
            
-            if (!resultat.Succes)
+            if (!resultat)
             {
-                return BadRequest(resultat.Erreur);
+                return BadRequest("impossible de mettre a jour le livre.");
             }
 
             return NoContent();
@@ -174,11 +199,16 @@ namespace Biblio.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteLivre(int id)
         {
-            var (succes, erreur) = await _livreService.DeleteLivreAsync(id);
-
-            if (!succes)
+            var command = new DeleteLivreCommand
             {
-                return BadRequest(erreur);
+                Id = id
+            };
+            
+            var resultat = await _mediator.Send(command);
+
+            if (!resultat)
+            {
+                return NotFound($"Aucun livre trouvé avec l'id {id}.");
             }
 
             return NoContent();
@@ -191,7 +221,7 @@ namespace Biblio.Api.Controllers
         [HttpGet("disponibles")]
         public async Task<ActionResult<IEnumerable<LivreDisponibleDto>>> GetLivresDisponibles()
         {
-            var resultats = await _livreService.GetLivresDisponiblesAsync();
+            var resultats = await _mediator.Send(new GetLivresDisponiblesQuery());
 
             var dtos = resultats
                 .Select(x => new LivreDisponibleDto

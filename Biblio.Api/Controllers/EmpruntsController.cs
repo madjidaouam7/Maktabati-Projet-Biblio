@@ -1,11 +1,14 @@
+using MediatR;
+//using Biblio.Application.Features.Emprunts.Queries;
+using Biblio.Application.Features.Emprunts.Commands;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Biblio.Application.Interfaces;
 using Biblio.Infrastructure.Identity;
 using Biblio.Api.DTOs;
 using System.Security.Claims;
+using Biblio.Application.Features.Emprunts.Queries;
 
 namespace Biblio.Api.Controllers
 {
@@ -14,12 +17,15 @@ namespace Biblio.Api.Controllers
     //Authorize]
     public class EmpruntsController : ControllerBase
     {
-        private readonly IEmpruntService _empruntService;
+        //private readonly IEmpruntService _empruntService;
+        private readonly IMediator _mediator;
+
         private readonly UserManager<Utilisateur> _userManager;
 
-        public EmpruntsController(IEmpruntService empruntService, UserManager<Utilisateur> userManager)
+        public EmpruntsController(/*IEmpruntService empruntService*/IMediator mediator, UserManager<Utilisateur> userManager)
         {
-            _empruntService = empruntService;
+            //_empruntService = empruntService;
+            _mediator = mediator;
             _userManager = userManager;
         }
 
@@ -32,7 +38,14 @@ namespace Biblio.Api.Controllers
                 return Unauthorized();
             }
 
-            var resultat = await _empruntService.EmprunterLivreAsync(createDto.LivreId, userId, createDto.DateRetourPrevue);
+            var command = new EmprunterLivreCommand
+            {
+                LivreId = createDto.LivreId,
+                UtilisateurId = userId,
+                DateRetourPrevue = createDto.DateRetourPrevue
+            };
+
+            var resultat = await _mediator.Send(command);
 
             if (!resultat.Succes)
             {
@@ -60,10 +73,15 @@ namespace Biblio.Api.Controllers
         [HttpPost("{id}/retourner")]
         public async Task<IActionResult> RetournerLivre(int id)
         {
-            var (succes, erreur) = await _empruntService.RetournerLivreAsync(id);
-            if (!succes)
+            var command = new RetournerLivreCommand
             {
-                return BadRequest(erreur);
+                Id = id
+            };
+
+            var resultat = await _mediator.Send(command);
+            if (!resultat.Succes)
+            {
+                return BadRequest(resultat.Erreur);
             }
             return NoContent();
         }
@@ -72,12 +90,18 @@ namespace Biblio.Api.Controllers
         public async Task<ActionResult<IEnumerable<EmpruntDto>>> GetEmpruntsActifs()
         {
             string? filtre = null;
+
             if (!User.IsInRole("Admin") && !User.IsInRole("Bibliothecaire"))
             {
                 filtre = User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
 
-            var emprunts = await _empruntService.GetEmpruntsActifsAsync(filtre);
+            var query = new GetEmpruntsActifsQuery
+            {
+                UtilisateurIdFiltre = filtre
+            };
+
+            var emprunts = await _mediator.Send(query);
             var dto = await ConstruireDtos(emprunts);
 
             return Ok(dto);
@@ -87,12 +111,18 @@ namespace Biblio.Api.Controllers
         public async Task<ActionResult<IEnumerable<EmpruntDto>>> GetHistorique()
         {
             string? filtre = null;
+
             if (!User.IsInRole("Admin") && !User.IsInRole("Bibliothecaire"))
             {
                 filtre = User.FindFirstValue(ClaimTypes.NameIdentifier);
             }
 
-            var emprunts = await _empruntService.GetHistoriqueAsync(filtre);
+            var query = new GetHistoriqueEmpruntsQuery
+            {
+                UtilisateurIdFiltre = filtre
+            };
+
+            var emprunts = await _mediator.Send(query);
             var dto = await ConstruireDtos(emprunts);
 
             return Ok(dto);
@@ -101,10 +131,22 @@ namespace Biblio.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<EmpruntDto>> GetEmprunt(int id)
         {
-            var emprunt = await _empruntService.GetEmpruntAsync(id);
+            var query = new GetEmpruntByIdQuery
+            {
+                Id = id
+            };
+
+            var emprunt = await _mediator.Send(query);
             if (emprunt == null)
             {
                 return NotFound($"Aucun emprunt trouvé avec l'id {id}.");
+            }
+
+            if (!User.IsInRole("Admin") &&
+            !User.IsInRole("Bibliothecaire") &&
+            emprunt.UtilisateurId != User.FindFirstValue(ClaimTypes.NameIdentifier))
+            {
+                return Forbid();
             }
 
             var utilisateur = await _userManager.FindByIdAsync(emprunt.UtilisateurId);
