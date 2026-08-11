@@ -17,7 +17,7 @@ namespace Biblio.Infrastructure.Features.Livres
 
         public async Task<bool> Handle(DeleteLivreCommand request, CancellationToken cancellationToken)
         {
-            var livre = await _context.Livres.FindAsync(request.Id);
+            var livre = await _context.Livres.FindAsync(new object[] { request.Id }, cancellationToken);
            
             if (livre == null)
             {

@@ -74,6 +74,7 @@ namespace Biblio.Api.Controllers
             var utilisateur = await _userManager.FindByEmailAsync(loginDto.Email);
             if (utilisateur == null)
             {
+                Thread.Sleep(6000);
                 return Unauthorized("Email ou mot de passe incorrect.");
             }
 

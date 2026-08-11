@@ -3,7 +3,7 @@ using Biblio.Domain.Entities;
 
 namespace Biblio.Application.Features.Livres.Commands
 {
-    public class UpdateLivreCommand : IRequest<bool>
+    public class UpdateLivreCommand : IRequest<ResultatLivre>
     {
         public int Id { get; set;}
         public string Titre { get; set; } = string.Empty;

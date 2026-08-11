@@ -42,23 +42,13 @@ namespace Biblio.Infrastructure.Features.Livres
             }
 
 
-            var livre = new Livre
-            {
-                Titre = request.Titre,
-                ISBN = request.ISBN,
-                DatePublication = request.DatePublication,
-                NombrePages = request.NombrePages,
-                AuteurId = request.AuteurId,
-                CategorieId = request.CategorieId,
-                NombreExemplaires = request.NombreExemplaires,
-            };
+            var livre = new Livre(request.Titre, request.ISBN, request.DatePublication, request.NombrePages,
+            request.NombreExemplaires, request.AuteurId, request.CategorieId);
+            
 
 
             _context.Livres.Add(livre);
             await _context.SaveChangesAsync(cancellationToken);
-
-            livre.Auteur = auteur;
-            livre.Categorie = categorie;
 
             return new ResultatLivre { Succes = true, Livre = livre };
         }

@@ -33,28 +33,22 @@ namespace Biblio.Infrastructure.Features.Emprunts
             var nombreEmpruntsEnCours = await _context.Emprunts
                 .CountAsync(e => e.LivreId == request.LivreId && e.Etat == EtatEmprunt.EnCours, cancellationToken);
 
-            if (nombreEmpruntsEnCours >= livre.NombreExemplaires)
+            if (!livre.EstDisponible(nombreEmpruntsEnCours))
             {
                 return new ResultatEmprunt { Succes = false, Erreur = $"Tous les exemplaires du livre '{livre.Titre}' sont déjà empruntés." };
             }
 
-            var emprunt = new Emprunt
-            {
-                LivreId = request.LivreId,
-                UtilisateurId = request.UtilisateurId,
-                DateEmprunt = maintenant,
-                DateRetourPrevue = request.DateRetourPrevue,
-                DateRetourEffective = null,
-                Etat = EtatEmprunt.EnCours
-            };
+            var emprunt = new Emprunt(
+                request.LivreId,
+                request.UtilisateurId,
+                maintenant,
+                request.DateRetourPrevue);
 
 
             _context.Emprunts.Add(emprunt);
             await _context.SaveChangesAsync(cancellationToken);
 
-            emprunt.Livre = livre;
-
-            return new ResultatEmprunt { Succes = true, Emprunt = emprunt };
+            return new ResultatEmprunt { Succes = true, Emprunt = emprunt, Livre = livre };
         }
     }
 }

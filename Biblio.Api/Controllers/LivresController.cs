@@ -183,9 +183,9 @@ namespace Biblio.Api.Controllers
 
             var resultat = await _mediator.Send(command);
            
-            if (!resultat)
+            if (!resultat.Succes)
             {
-                return BadRequest("impossible de mettre a jour le livre.");
+                return BadRequest("resultat.Erreur");
             }
 
             return NoContent();

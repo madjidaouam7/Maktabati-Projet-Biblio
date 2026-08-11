@@ -28,8 +28,7 @@ namespace Biblio.Infrastructure.Features.Emprunts
                 return new ResultatEmprunt { Succes = false, Erreur = "Ce livre a déjà été retourné." };
             }
 
-            emprunt.DateRetourEffective = DateTime.Now;
-            emprunt.Etat = EtatEmprunt.Retourne;
+            emprunt.Retourner();
 
             await _context.SaveChangesAsync(cancellationToken);
             return new ResultatEmprunt { Succes = true, Emprunt = emprunt };

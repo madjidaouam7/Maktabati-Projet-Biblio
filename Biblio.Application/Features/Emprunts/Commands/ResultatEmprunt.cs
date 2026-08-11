@@ -7,5 +7,6 @@ namespace Biblio.Application.Features.Emprunts.Commands
         public bool Succes { get; set; }
         public string? Erreur { get; set; }
         public Emprunt? Emprunt { get; set; }
+        public Livre? Livre { get; set; }
     }
 }

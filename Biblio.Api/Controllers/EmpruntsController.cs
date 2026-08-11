@@ -59,7 +59,7 @@ namespace Biblio.Api.Controllers
             {
                 Id = emprunt.Id,
                 LivreId = emprunt.LivreId,
-                LivreTitre = emprunt.Livre?.Titre ?? "",
+                LivreTitre = resultat.Livre?.Titre ?? "",
                 Utilisateur = utilisateur?.Email ?? "Inconnu",
                 DateEmprunt = emprunt.DateEmprunt,
                 DateRetourPrevue = emprunt.DateRetourPrevue,

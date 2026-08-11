@@ -6,7 +6,7 @@ using Biblio.Infrastructure.Data;
 
 namespace Biblio.Infrastructure.Features.Livres
 {
-    public class UpdateLivreCommandHandler : IRequestHandler<UpdateLivreCommand, bool>
+    public class UpdateLivreCommandHandler : IRequestHandler<UpdateLivreCommand, ResultatLivre>
     {
         private readonly BiblioDbContext _context;
 
@@ -15,49 +15,44 @@ namespace Biblio.Infrastructure.Features.Livres
             _context = context;
         }
 
-        public async Task<bool> Handle(UpdateLivreCommand request, CancellationToken cancellationToken)
+        public async Task<ResultatLivre> Handle(UpdateLivreCommand request, CancellationToken cancellationToken)
         {
-            var livre = await _context.Livres.FindAsync(request.Id); //new object[] { request.Id } a la place de request id pour update et delete
+            var livre = await _context.Livres.FindAsync(new object[] { request.Id }, cancellationToken); //new object[] { request.Id } a la place de request id pour update et delete
 
             if (livre == null)
             {
-                return false;
+                return new ResultatLivre { Succes = false, Erreur = $"Aucun livre trouvé avec l'id {request.Id}." };
             }
 
             var auteur = await _context.Auteurs.FindAsync(request.AuteurId);
             if (auteur == null)
             {
-                return false;
+                return new ResultatLivre { Succes = false, Erreur = $"Aucun auteur trouvé avec l'id {request.AuteurId}." };
             }
 
             var categorie = await _context.Categories.FindAsync(request.CategorieId);
             if (categorie == null)
             {
-                return false;
+                return new ResultatLivre { Succes = false, Erreur = $"Aucune catégorie trouvée avec l'id {request.CategorieId}." };
             }
 
             var isbnExiste = await _context.Livres.AnyAsync(l => l.ISBN == request.ISBN
              && l.Id != request.Id, cancellationToken);
             if (isbnExiste)
             {
-                return false;
+                return new ResultatLivre { Succes = false, Erreur = $"Un livre avec l'ISBN '{request.ISBN}' existe déjà." };
             }
 
             if (request.DatePublication > DateTime.Now)
             {
-                return false;
+                return new ResultatLivre { Succes = false, Erreur = "La date de publication ne peut pas être dans le futur." };
             }
 
-            livre.Titre = request.Titre;
-            livre.ISBN = request.ISBN;
-            livre.DatePublication = request.DatePublication;
-            livre.NombrePages = request.NombrePages;
-            livre.AuteurId = request.AuteurId;
-            livre.CategorieId = request.CategorieId;
-            livre.NombreExemplaires = request.NombreExemplaires;
+            livre.Modifier(request.Titre, request.ISBN, request.DatePublication, request.NombrePages,
+            request.NombreExemplaires, request.AuteurId, request.CategorieId);
 
             await _context.SaveChangesAsync(cancellationToken);
-            return true;
+            return new ResultatLivre{ Succes = true, Livre = livre };
         }
     }
 }
