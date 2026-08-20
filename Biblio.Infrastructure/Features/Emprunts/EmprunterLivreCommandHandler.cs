@@ -19,11 +19,6 @@ namespace Biblio.Infrastructure.Features.Emprunts
         {
             var maintenant = DateTime.Now;
 
-            if (request.DateRetourPrevue < maintenant)
-            {
-                return new ResultatEmprunt { Succes = false, Erreur = "La date de retour prévue doit être supérieure ou égale à la date d'emprunt." };
-            }
-
             var livre = await _context.Livres.FindAsync(request.LivreId);
             if (livre == null)
             {
@@ -38,17 +33,19 @@ namespace Biblio.Infrastructure.Features.Emprunts
                 return new ResultatEmprunt { Succes = false, Erreur = $"Tous les exemplaires du livre '{livre.Titre}' sont déjà empruntés." };
             }
 
-            var emprunt = new Emprunt(
-                request.LivreId,
-                request.UtilisateurId,
-                maintenant,
-                request.DateRetourPrevue);
+            try
+            {
+                var emprunt = new Emprunt(request.LivreId, request.UtilisateurId, maintenant, request.DateRetourPrevue);
 
+                _context.Emprunts.Add(emprunt);
+                await _context.SaveChangesAsync(cancellationToken);
 
-            _context.Emprunts.Add(emprunt);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return new ResultatEmprunt { Succes = true, Emprunt = emprunt, Livre = livre };
+                return new ResultatEmprunt { Succes = true, Emprunt = emprunt, Livre = livre };
+            }
+            catch (ArgumentException ex)
+            {
+                return new ResultatEmprunt { Succes = false, Erreur = ex.Message };
+            }
         }
     }
 }

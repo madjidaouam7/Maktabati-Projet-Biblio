@@ -1,0 +1,51 @@
+@page "/livres-disponibles"
+@using Biblio.Web.Services
+@inject LivreService LivreService
+
+<PageTitle>Livres disponibles</PageTitle>
+
+<h1>Livres disponibles</h1>
+
+@if (livres == null)
+{
+    <p><em>Chargement...</em></p>
+}
+else if (!livres.Any())
+{
+    <p>Aucun livre disponible actuellement.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Auteur</th>
+                <th>Exemplaires disponibles</th>
+                <th>Total exemplaires</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var livre in livres)
+            {
+                <tr>
+                    <td>@livre.Titre</td>
+                    <td>@livre.AuteurNomComplet</td>
+                    <td>
+                        <span class="badge bg-success">@livre.NombreExemplairesDisponibles</span>
+                    </td>
+                    <td>@livre.NombreExemplaires</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<LivreDisponibleDto>? livres;
+
+    protected override async Task OnInitializedAsync()
+    {
+        livres = await LivreService.GetLivresDisponiblesAsync();
+    }
+}

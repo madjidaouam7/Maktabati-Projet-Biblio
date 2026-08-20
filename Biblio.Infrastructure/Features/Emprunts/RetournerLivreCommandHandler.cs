@@ -28,10 +28,17 @@ namespace Biblio.Infrastructure.Features.Emprunts
                 return new ResultatEmprunt { Succes = false, Erreur = "Ce livre a déjà été retourné." };
             }
 
-            emprunt.Retourner();
+            try
+            {
+                emprunt.Retourner();
 
-            await _context.SaveChangesAsync(cancellationToken);
-            return new ResultatEmprunt { Succes = true, Emprunt = emprunt };
+                await _context.SaveChangesAsync(cancellationToken);
+                return new ResultatEmprunt { Succes = true, Emprunt = emprunt };
+            }
+            catch (InvalidOperationException ex)
+            {
+                return new ResultatEmprunt { Succes = false, Erreur = ex.Message };
+            }
         }
     }
 }

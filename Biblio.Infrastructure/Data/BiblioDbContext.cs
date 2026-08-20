@@ -16,6 +16,7 @@ namespace Biblio.Infrastructure.Data
         public DbSet<Auteur> Auteurs { get; set; }
         public DbSet<Categorie> Categories { get; set; }
         public DbSet<Emprunt> Emprunts { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +53,18 @@ namespace Biblio.Infrastructure.Data
                 .HasOne<Utilisateur>()
                 .WithMany()
                 .HasForeignKey(e => e.UtilisateurId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Reservation>()
+                .HasOne(r => r.Livre)
+                .WithMany(l => l.Reservations)
+                .HasForeignKey(r => r.LivreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Reservation>()
+                .HasOne<Utilisateur>()
+                .WithMany()
+                .HasForeignKey(r => r.UtilisateurId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

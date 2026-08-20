@@ -1,4 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Biblio.Web.Services
+@inject EtatAuthService EtatAuth
+
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Biblio.Web</a>
     </div>
@@ -43,5 +47,49 @@
                 <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Connexion
             </NavLink>
         </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="livres-disponibles">
+                <span class="bi bi-check-circle-fill-nav-menu" aria-hidden="true"></span> Livres disponibles
+            </NavLink>
+        </div>
+
+
+        @if (EtatAuth.Roles.Contains("Admin"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="gestion-utilisateurs">
+                    <span class="bi bi-person-plus-fill-nav-menu" aria-hidden="true"></span> Gestion utilisateurs
+                </NavLink>
+            </div>
+        }
+
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="reservations">
+                <span class="bi bi-bookmark-fill-nav-menu" aria-hidden="true"></span> Réservations
+            </NavLink>
+        </div>
     </nav>
 </div>
+
+
+
+@implements IDisposable
+
+@code {
+    protected override void OnInitialized()
+    {
+        EtatAuth.OnChange += RafraichirMenu;
+    }
+
+    private void RafraichirMenu()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        EtatAuth.OnChange -= RafraichirMenu;
+    }
+}

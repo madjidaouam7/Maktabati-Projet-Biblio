@@ -13,6 +13,7 @@ builder.Services.AddScoped<CategorieService>();
 builder.Services.AddScoped<EmpruntService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EtatAuthService>();
+builder.Services.AddScoped<ReservationService>();
 
 builder.Services.AddHttpClient("BiblioApi", client =>
 {

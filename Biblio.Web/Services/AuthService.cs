@@ -33,5 +33,49 @@ namespace Biblio.Web.Services
             _etatAuth.Connecter(resultat.Token, resultat.Email, resultat.Roles);
             return (true, null);
         }
+
+
+
+
+        public async Task<(bool Succes, string? Erreur)> RegisterAsync(RegisterDto dto)
+        {
+            var reponse = await _httpClient.PostAsJsonAsync("api/auth/register", dto);
+
+            if (!reponse.IsSuccessStatusCode)
+            {
+                var erreur = await reponse.Content.ReadAsStringAsync();
+                return (false, erreur);
+            }
+
+            var resultat = await reponse.Content.ReadFromJsonAsync<AuthResponseDto>();
+            if (resultat == null)
+            {
+                return (false, "Réponse invalide du serveur.");
+            }
+
+            _etatAuth.Connecter(resultat.Token, resultat.Email, resultat.Roles);
+            return (true, null);
+        }
+
+
+
+        public async Task<(bool Succes, string? Erreur)> CreerBibliothecaireAsync(CreerBibliothecaireDto dto)
+        {
+            if (_etatAuth.EstConnecte)
+            {
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _etatAuth.Token);
+            }
+
+            var reponse = await _httpClient.PostAsJsonAsync("api/auth/creer-bibliothecaire", dto);
+
+            if (reponse.IsSuccessStatusCode)
+            {
+                return (true, null);
+            }
+
+            var erreur = await reponse.Content.ReadAsStringAsync();
+            return (false, erreur);
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //Authorize]
+    //[Authorize]
     public class EmpruntsController : ControllerBase
     {
         //private readonly IEmpruntService _empruntService;

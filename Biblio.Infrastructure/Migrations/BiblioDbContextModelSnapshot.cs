@@ -132,6 +132,34 @@ namespace Biblio.Infrastructure.Migrations
                     b.ToTable("Livres");
                 });
 
+            modelBuilder.Entity("Biblio.Domain.Entities.Reservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateReservation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Etat")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LivreId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UtilisateurId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LivreId");
+
+                    b.HasIndex("UtilisateurId");
+
+                    b.ToTable("Reservations");
+                });
+
             modelBuilder.Entity("Biblio.Infrastructure.Identity.Utilisateur", b =>
                 {
                     b.Property<string>("Id")
@@ -368,6 +396,23 @@ namespace Biblio.Infrastructure.Migrations
                     b.Navigation("Categorie");
                 });
 
+            modelBuilder.Entity("Biblio.Domain.Entities.Reservation", b =>
+                {
+                    b.HasOne("Biblio.Domain.Entities.Livre", "Livre")
+                        .WithMany("Reservations")
+                        .HasForeignKey("LivreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Biblio.Infrastructure.Identity.Utilisateur", null)
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Livre");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -432,6 +477,8 @@ namespace Biblio.Infrastructure.Migrations
             modelBuilder.Entity("Biblio.Domain.Entities.Livre", b =>
                 {
                     b.Navigation("Emprunts");
+
+                    b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618
         }

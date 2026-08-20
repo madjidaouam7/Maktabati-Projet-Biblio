@@ -43,16 +43,18 @@ namespace Biblio.Infrastructure.Features.Livres
                 return new ResultatLivre { Succes = false, Erreur = $"Un livre avec l'ISBN '{request.ISBN}' existe déjà." };
             }
 
-            if (request.DatePublication > DateTime.Now)
+            try
             {
-                return new ResultatLivre { Succes = false, Erreur = "La date de publication ne peut pas être dans le futur." };
+                livre.Modifier(request.Titre, request.ISBN, request.DatePublication, request.NombrePages,
+                request.NombreExemplaires, request.AuteurId, request.CategorieId);
+
+                await _context.SaveChangesAsync(cancellationToken);
+                return new ResultatLivre { Succes = true, Livre = livre };
             }
-
-            livre.Modifier(request.Titre, request.ISBN, request.DatePublication, request.NombrePages,
-            request.NombreExemplaires, request.AuteurId, request.CategorieId);
-
-            await _context.SaveChangesAsync(cancellationToken);
-            return new ResultatLivre{ Succes = true, Livre = livre };
+            catch (ArgumentException ex)
+            {
+                return new ResultatLivre { Succes = false, Erreur = ex.Message };
+            }
         }
     }
 }

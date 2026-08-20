@@ -18,6 +18,7 @@ namespace Biblio.Domain.Entities
         public int NombreExemplaires { get; private set; }
 
         public ICollection<Emprunt> Emprunts { get; private set; } = new List<Emprunt>();
+        public ICollection<Reservation> Reservations { get; private set; } = new List<Reservation>();
 
         private Livre() { }
 

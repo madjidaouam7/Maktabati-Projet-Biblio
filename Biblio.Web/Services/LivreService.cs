@@ -28,6 +28,16 @@ namespace Biblio.Web.Services
         public int CategorieId { get; set; }
     }
 
+
+    public class LivreDisponibleDto
+    {
+        public int Id { get; set; }
+        public string Titre { get; set; } = string.Empty;
+        public string AuteurNomComplet { get; set; } = string.Empty;
+        public int NombreExemplaires { get; set; }
+        public int NombreExemplairesDisponibles { get; set; }
+    }
+
     public class LivresPagines
     {
         public int Page { get; set; }
@@ -109,6 +119,14 @@ namespace Biblio.Web.Services
             }
             var erreur = await reponse.Content.ReadAsStringAsync();
             return (false, erreur);
+        }
+
+
+        public async Task<List<LivreDisponibleDto>> GetLivresDisponiblesAsync()
+        {
+            AjouterToken();
+            var reponse = await _httpClient.GetFromJsonAsync<List<LivreDisponibleDto>>("api/livres/disponibles");
+            return reponse ?? new List<LivreDisponibleDto>();
         }
     }
 }

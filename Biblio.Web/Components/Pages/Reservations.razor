@@ -1,0 +1,147 @@
+@page "/reservations"
+@using Biblio.Web.Services
+@inject ReservationService ReservationService
+
+<PageTitle>Réservations</PageTitle>
+
+<h1>Réservations</h1>
+
+<Notification Message="@message" EstErreur="estErreur" OnFermer="@(() => message = null)" />
+
+<button class="btn btn-primary mb-3" @onclick="AfficherFormulaire">
+    + Réserver un livre
+</button>
+
+@if (afficherFormulaire)
+{
+    <div class="card p-3 mb-3">
+        <EditForm Model="reservationEnCours" OnValidSubmit="Reserver">
+            <div class="mb-2">
+                <label>Id du livre</label>
+                <InputNumber class="form-control" @bind-Value="reservationEnCours.LivreId" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Réserver</button>
+            <button type="button" class="btn btn-secondary" @onclick="() => afficherFormulaire = false">Annuler</button>
+        </EditForm>
+    </div>
+}
+
+@if (reservations == null)
+{
+    <p><em>Chargement...</em></p>
+}
+else if (!reservations.Any())
+{
+    <p>Aucune réservation trouvée.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Livre</th>
+                <th>Utilisateur</th>
+                <th>Date réservation</th>
+                <th>Etat</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reservation in reservations)
+            {
+                <tr>
+                    <td>@reservation.Id</td>
+                    <td>@reservation.LivreTitre</td>
+                    <td>@reservation.Utilisateur</td>
+                    <td>@reservation.DateReservation.ToString("dd/MM/yyyy")</td>
+                    <td>@reservation.Etat</td>
+                    <td>
+                        @if (reservation.Etat == "EnAttente")
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => Honorer(reservation.Id)">Honorer</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => Annuler(reservation.Id)">Annuler</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ReservationDto>? reservations;
+    private bool afficherFormulaire = false;
+    private CreateReservationDto reservationEnCours = new();
+    private string? message;
+    private bool estErreur;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Charger();
+    }
+
+    private async Task Charger()
+    {
+        reservations = await ReservationService.GetReservationsAsync();
+    }
+
+    private void AfficherFormulaire()
+    {
+        reservationEnCours = new CreateReservationDto();
+        afficherFormulaire = true;
+    }
+
+    private async Task Reserver()
+    {
+        var (succes, erreur) = await ReservationService.ReserverLivreAsync(reservationEnCours);
+
+        if (succes)
+        {
+            afficherFormulaire = false;
+            await Charger();
+            message = "Réservation effectuée avec succès !";
+            estErreur = false;
+        }
+        else
+        {
+            message = erreur ?? "Une erreur est survenue.";
+            estErreur = true;
+        }
+    }
+
+    private async Task Annuler(int id)
+    {
+        var (succes, erreur) = await ReservationService.AnnulerReservationAsync(id);
+
+        if (succes)
+        {
+            await Charger();
+            message = "Réservation annulée.";
+            estErreur = false;
+        }
+        else
+        {
+            message = erreur ?? "Une erreur est survenue.";
+            estErreur = true;
+        }
+    }
+
+    private async Task Honorer(int id)
+    {
+        var (succes, erreur) = await ReservationService.HonorerReservationAsync(id);
+
+        if (succes)
+        {
+            await Charger();
+            message = "Réservation honorée. Vous pouvez emprunter le livre.";
+            estErreur = false;
+        }
+        else
+        {
+            message = erreur ?? "Une erreur est survenue.";
+            estErreur = true;
+        }
+    }
+}
