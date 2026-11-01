@@ -5,12 +5,12 @@ namespace Biblio.Web.Services
     public class AuthService
     {
         private readonly HttpClient _httpClient;
-        private readonly EtatAuthService _etatAuth;
+        private readonly BiblioAuthenticationStateProvider _authStateProvider;
 
-        public AuthService(IHttpClientFactory httpClientFactory, EtatAuthService etatAuth)
+        public AuthService(IHttpClientFactory httpClientFactory, BiblioAuthenticationStateProvider authStateProvider)
         {
             _httpClient = httpClientFactory.CreateClient("BiblioApi");
-            _etatAuth = etatAuth;
+            _authStateProvider = authStateProvider;
         }
 
         public async Task<(bool Succes, string? Erreur)> LoginAsync(string email, string motDePasse)
@@ -30,7 +30,7 @@ namespace Biblio.Web.Services
                 return (false, "Réponse invalide du serveur.");
             }
 
-            _etatAuth.Connecter(resultat.Token, resultat.Email, resultat.Roles);
+            _authStateProvider.Connecter(resultat.Token, resultat.Email, resultat.Roles);
             return (true, null);
         }
 
@@ -53,7 +53,7 @@ namespace Biblio.Web.Services
                 return (false, "Réponse invalide du serveur.");
             }
 
-            _etatAuth.Connecter(resultat.Token, resultat.Email, resultat.Roles);
+            _authStateProvider.Connecter(resultat.Token, resultat.Email, resultat.Roles);
             return (true, null);
         }
 
@@ -61,10 +61,10 @@ namespace Biblio.Web.Services
 
         public async Task<(bool Succes, string? Erreur)> CreerBibliothecaireAsync(CreerBibliothecaireDto dto)
         {
-            if (_etatAuth.EstConnecte)
+            if (_authStateProvider.EstConnecte && !string.IsNullOrEmpty(_authStateProvider.Token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _etatAuth.Token);
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authStateProvider.Token);
             }
 
             var reponse = await _httpClient.PostAsJsonAsync("api/auth/creer-bibliothecaire", dto);

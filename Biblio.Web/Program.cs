@@ -1,11 +1,15 @@
 using Biblio.Web.Components;
 using Biblio.Web.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddAuthorizationCore();
+builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<LivreService>();
 builder.Services.AddScoped<AuteurService>();
@@ -14,6 +18,9 @@ builder.Services.AddScoped<EmpruntService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EtatAuthService>();
 builder.Services.AddScoped<ReservationService>();
+builder.Services.AddScoped<BiblioAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(
+    sp => sp.GetRequiredService<BiblioAuthenticationStateProvider>());
 
 builder.Services.AddHttpClient("BiblioApi", client =>
 {

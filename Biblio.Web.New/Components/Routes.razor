@@ -1,0 +1,16 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Biblio.Web.New.Authentication
+
+<AuthenticationInitializer />
+
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <p>Vous devez vous connecter pour accéder à cette page.</p>
+            </NotAuthorized>
+        </AuthorizeRouteView>
+
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

@@ -27,7 +27,7 @@
     protected override void OnInitialized()
     {
         var page = new Uri(NavigationManager.Uri).AbsolutePath;
-        var pagesPubliques = new[] { "/login", "/register" };
+        var pagesPubliques = new[] { "/", "/login", "/register" };
 
         if (!EtatAuth.EstConnecte && !pagesPubliques.Contains(page))
         {
@@ -38,6 +38,6 @@
     private void SeDeconnecter()
     {
         EtatAuth.Deconnecter();
-        NavigationManager.NavigateTo("/login", forceLoad: true);
+        NavigationManager.NavigateTo("/", forceLoad: true);
     }
 }

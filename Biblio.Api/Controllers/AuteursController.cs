@@ -12,16 +12,10 @@ namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize] // s'applique par défaut à TOUTES les actions du Controller
+    [Authorize]
     public class AuteursController : ControllerBase
     {
-        //private readonly IAuteurService _auteurService;
         private readonly IMediator _mediator;
-
-        /*public AuteursController(IAuteurService auteurService)
-        {
-            _auteurService = auteurService;
-        }*/
 
         public AuteursController(IMediator mediator)
         {

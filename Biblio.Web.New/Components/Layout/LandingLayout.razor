@@ -1,0 +1,467 @@
+@inherits LayoutComponentBase
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Biblio.Web.New.Authentication
+@using Biblio.Web.New.DTOs
+
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+
+<div class="landing-layout" @onkeydown="HandleLayoutKeyDown">
+    <header class="site-header">
+        <div class="container-xxl header-inner">
+            <NavLink class="brand" href="/" Match="NavLinkMatch.All" aria-label="Maktabati, accueil">
+                <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
+                    <path d="M5 9.5c6-2.1 11.1-.9 16 3.1v21c-4.9-4-10-5.2-16-3.1v-21Zm32 0c-6-2.1-11.1-.9-16 3.1v21c4.9-4 10-5.2 16-3.1v-21Z" />
+                    <path d="M9 15c3.5-.6 6.4.1 9 1.8M9 20c3.5-.6 6.4.1 9 1.8m15-6.8c-3.5-.6-6.4.1-9 1.8m9 3.2c-3.5-.6-6.4.1-9 1.8" />
+                </svg>
+                <span class="brand-word">Maktabati<span class="brand-period">.</span></span>
+            </NavLink>
+
+            <nav class="primary-nav d-none d-lg-flex" aria-label="Navigation principale">
+                <NavLink href="/" Match="NavLinkMatch.All">Accueil</NavLink>
+                <NavLink href="/livres">Livres</NavLink>
+                <NavLink href="/auteurs">Auteurs</NavLink>
+                <NavLink href="/categories">Catégories</NavLink>
+            </nav>
+
+            <div class="header-actions">
+                <AuthorizeView>
+                    <Authorized>
+                        <button class="header-login" @onclick="Logout">Déconnexion</button>
+                        <NavLink class="header-cta d-none d-sm-inline-flex" href="/livres">
+                            Mon espace
+                            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M10 5l5 5-5 5" /></svg>
+                        </NavLink>
+                    </Authorized>
+                    <NotAuthorized>
+                        <button class="header-login" @onclick="OpenLoginModal">Se connecter</button>
+                        <button class="header-cta" @onclick="OpenRegisterModal">Inscription</button>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+
+            <div class="mobile-navigation d-lg-none">
+                <button type="button"
+                        class="mobile-navigation-toggle"
+                        aria-label="Ouvrir le menu de navigation"
+                        aria-expanded="@isMobileMenuOpen"
+                        @onclick="ToggleMobileMenu">
+                    <span></span><span></span>
+                </button>
+                @if (isMobileMenuOpen)
+                {
+                <nav class="mobile-navigation-panel" aria-label="Navigation mobile">
+                    <NavLink href="/" Match="NavLinkMatch.All">Accueil</NavLink>
+                    <NavLink href="/livres">Livres</NavLink>
+                    <NavLink href="/auteurs">Auteurs</NavLink>
+                    <NavLink href="/categories">Catégories</NavLink>
+                    <AuthorizeView>
+                        <Authorized>
+                            <button class="mobile-logout" @onclick="Logout">Déconnexion</button>
+                        </Authorized>
+                        <NotAuthorized>
+                            <button class="mobile-auth-button" @onclick="OpenLoginModal">Se connecter</button>
+                            <button class="mobile-auth-button mobile-register-button" @onclick="OpenRegisterModal">Inscription</button>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </nav>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <CascadingValue Value="(Action<string>)OpenAuthModal" Name="OpenAuthModal">
+            @Body
+        </CascadingValue>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container-xxl footer-main">
+            <div class="footer-brand">
+                <NavLink class="brand footer-brand-link" href="/" Match="NavLinkMatch.All" aria-label="Maktabati, accueil">
+                    <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
+                        <path d="M5 9.5c6-2.1 11.1-.9 16 3.1v21c-4.9-4-10-5.2-16-3.1v-21Zm32 0c-6-2.1-11.1-.9-16 3.1v21c4.9-4 10-5.2 16-3.1v-21Z" />
+                        <path d="M9 15c3.5-.6 6.4.1 9 1.8M9 20c3.5-.6 6.4.1 9 1.8m15-6.8c-3.5-.6-6.4.1-9 1.8m9 3.2c-3.5-.6-6.4.1-9 1.8" />
+                    </svg>
+                    <span class="brand-word">Maktabati<span class="brand-period">.</span></span>
+                </NavLink>
+                <p>Un espace pour explorer les livres et faire vivre Maktabati.</p>
+            </div>
+            <div class="footer-links">
+                <h2>Explorer</h2>
+                <NavLink href="/livres">Livres</NavLink>
+                <NavLink href="/auteurs">Auteurs</NavLink>
+                <NavLink href="/categories">Catégories</NavLink>
+            </div>
+            <div class="footer-links">
+                <h2>Votre espace</h2>
+                <AuthorizeView>
+                    <NotAuthorized>
+                        <button class="footer-auth-button" @onclick="OpenLoginModal">Se connecter</button>
+                        <button class="footer-auth-button" @onclick="OpenRegisterModal">S'inscrire</button>
+                    </NotAuthorized>
+                </AuthorizeView>
+                <AuthorizeView Roles="Admin,Bibliothecaire">
+                    <Authorized>
+                        <NavLink href="/emprunts">Gestion des emprunts</NavLink>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </div>
+        <div class="container-xxl footer-bottom">
+            <span>© @DateTime.Now.Year Maktabati</span>
+            <span>Fait pour les amoureux des livres.</span>
+        </div>
+    </footer>
+
+    @if (activeAuthModal is not null)
+    {
+        <div class="auth-modal-backdrop"
+             role="presentation"
+             tabindex="-1"
+             @onclick="CloseAuthModal">
+            <section class="auth-modal"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="auth-modal-title"
+                     @onclick:stopPropagation="true">
+                <button type="button"
+                        class="auth-modal-close"
+                        aria-label="Fermer la fenêtre"
+                        autofocus
+                        @onclick="CloseAuthModal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                @if (activeAuthModal == "login")
+                {
+                    <p class="auth-modal-eyebrow">Ravi de vous revoir</p>
+                    <h2 id="auth-modal-title">Se connecter</h2>
+                    <p class="auth-modal-intro">Retrouvez votre espace Maktabati.</p>
+
+                    @if (!string.IsNullOrWhiteSpace(loginError))
+                    {
+                        <div class="alert alert-danger" role="alert">@loginError</div>
+                    }
+
+                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LandingLoginForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="mb-3">
+                            <label for="landing-login-email" class="form-label">Adresse e-mail</label>
+                            <InputText id="landing-login-email"
+                                       type="email"
+                                       class="form-control"
+                                       autocomplete="email"
+                                       @bind-Value="loginModel.Email" />
+                            <ValidationMessage For="@(() => loginModel.Email)" />
+                        </div>
+                        <div class="mb-4">
+                            <label for="landing-login-password" class="form-label">Mot de passe</label>
+                            <InputText id="landing-login-password"
+                                       type="password"
+                                       class="form-control"
+                                       autocomplete="current-password"
+                                       @bind-Value="loginModel.MotDePasse" />
+                            <ValidationMessage For="@(() => loginModel.MotDePasse)" />
+                        </div>
+
+                        <button type="submit" class="auth-submit" disabled="@isSubmitting">
+                            @(isSubmitting ? "Connexion..." : "Se connecter")
+                        </button>
+                    </EditForm>
+                    <p class="auth-modal-switch">
+                        Pas encore de compte ?
+                        <button type="button" @onclick="OpenRegisterModal">S'inscrire</button>
+                    </p>
+                }
+                else
+                {
+                    <p class="auth-modal-eyebrow">Bienvenue chez Maktabati</p>
+                    <h2 id="auth-modal-title">Créer votre compte</h2>
+                    <p class="auth-modal-intro">Inscrivez-vous pour rejoindre la bibliothèque.</p>
+
+                    @if (!string.IsNullOrWhiteSpace(registerError))
+                    {
+                        <div class="alert alert-danger" role="alert">@registerError</div>
+                    }
+
+                    <EditForm Model="@registerModel" OnValidSubmit="HandleRegister" FormName="LandingRegisterForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <label for="landing-register-first-name" class="form-label">Prénom</label>
+                                <InputText id="landing-register-first-name"
+                                           class="form-control"
+                                           autocomplete="given-name"
+                                           @bind-Value="registerModel.Prenom" />
+                                <ValidationMessage For="@(() => registerModel.Prenom)" />
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label for="landing-register-last-name" class="form-label">Nom</label>
+                                <InputText id="landing-register-last-name"
+                                           class="form-control"
+                                           autocomplete="family-name"
+                                           @bind-Value="registerModel.Nom" />
+                                <ValidationMessage For="@(() => registerModel.Nom)" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="landing-register-email" class="form-label">Adresse e-mail</label>
+                            <InputText id="landing-register-email"
+                                       type="email"
+                                       class="form-control"
+                                       autocomplete="email"
+                                       @bind-Value="registerModel.Email" />
+                            <ValidationMessage For="@(() => registerModel.Email)" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="landing-register-password" class="form-label">Mot de passe</label>
+                            <InputText id="landing-register-password"
+                                       type="password"
+                                       class="form-control"
+                                       autocomplete="new-password"
+                                       @bind-Value="registerModel.MotDePasse" />
+                            <div class="form-text">Au moins 6 caractères.</div>
+                            <ValidationMessage For="@(() => registerModel.MotDePasse)" />
+                        </div>
+                        <div class="mb-4">
+                            <label for="landing-register-confirm-password" class="form-label">Confirmer le mot de passe</label>
+                            <InputText id="landing-register-confirm-password"
+                                       type="password"
+                                       class="form-control"
+                                       autocomplete="new-password"
+                                       @bind-Value="registerModel.ConfirmationMotDePasse" />
+                            <ValidationMessage For="@(() => registerModel.ConfirmationMotDePasse)" />
+                        </div>
+
+                        <button type="submit" class="auth-submit" disabled="@isSubmitting">
+                            @(isSubmitting ? "Création du compte..." : "Créer mon compte")
+                        </button>
+                    </EditForm>
+                    <p class="auth-modal-switch">
+                        Vous avez déjà un compte ?
+                        <button type="button" @onclick="OpenLoginModal">Se connecter</button>
+                    </p>
+                }
+            </section>
+        </div>
+    }
+</div>
+
+@code {
+    [Inject]
+    private IHttpClientFactory HttpClientFactory { get; set; } = default!;
+
+    private readonly LoginDto loginModel = new();
+    private readonly RegisterModalModel registerModel = new();
+    private string? activeAuthModal;
+    private string? loginError;
+    private string? registerError;
+    private bool isSubmitting;
+    private bool isMobileMenuOpen;
+
+    private void OpenAuthModal(string modal)
+    {
+        activeAuthModal = modal;
+        loginError = null;
+        registerError = null;
+        isSubmitting = false;
+        isMobileMenuOpen = false;
+    }
+
+    private void OpenLoginModal() => OpenAuthModal("login");
+
+    private void OpenRegisterModal() => OpenAuthModal("register");
+
+    private void CloseAuthModal()
+    {
+        if (!isSubmitting)
+        {
+            activeAuthModal = null;
+        }
+    }
+
+    private void ToggleMobileMenu() => isMobileMenuOpen = !isMobileMenuOpen;
+
+    private void HandleLayoutKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseAuthModal();
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        isSubmitting = true;
+        loginError = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BiblioApi");
+            using var response = await client.PostAsJsonAsync("api/auth/login", loginModel);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                loginError = "Email ou mot de passe incorrect.";
+                return;
+            }
+
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+            if (authResponse is null || string.IsNullOrWhiteSpace(authResponse.Token))
+            {
+                loginError = "La réponse de l'API est invalide.";
+                return;
+            }
+
+            await AuthProvider.MarkUserAsAuthenticatedAsync(authResponse.Token);
+            activeAuthModal = null;
+            Navigation.NavigateTo("/accueil");
+        }
+        catch (HttpRequestException)
+        {
+            loginError = "Impossible de contacter l'API. Vérifiez qu'elle est démarrée.";
+        }
+        catch (JsonException)
+        {
+            loginError = "La réponse de l'API est invalide.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        isSubmitting = true;
+        registerError = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BiblioApi");
+            using var response = await client.PostAsJsonAsync(
+                "api/auth/register",
+                new
+                {
+                    registerModel.Email,
+                    registerModel.MotDePasse,
+                    registerModel.Nom,
+                    registerModel.Prenom
+                });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                registerError = await ReadRegistrationErrorAsync(response);
+                return;
+            }
+
+            var authResponse = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+            if (authResponse is null || string.IsNullOrWhiteSpace(authResponse.Token))
+            {
+                registerError = "Le compte a été créé, mais la réponse d'authentification est invalide. Connectez-vous avec vos identifiants.";
+                return;
+            }
+
+            await AuthProvider.MarkUserAsAuthenticatedAsync(authResponse.Token);
+
+            var authenticationState = await AuthProvider.GetAuthenticationStateAsync();
+            if (authenticationState.User.Identity?.IsAuthenticated == true)
+            {
+                activeAuthModal = null;
+                Navigation.NavigateTo("/accueil");
+            }
+            else
+            {
+                registerError = "Le compte a été créé, mais la connexion n'a pas pu être établie. Connectez-vous avec vos identifiants.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            registerError = "Impossible de contacter l'API. Vérifiez qu'elle est démarrée, puis réessayez.";
+        }
+        catch (JsonException)
+        {
+            registerError = "La réponse de l'API est invalide. Réessayez ou connectez-vous si votre compte a bien été créé.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private static async Task<string> ReadRegistrationErrorAsync(HttpResponseMessage response)
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return "La création du compte a échoué. Vérifiez vos informations et réessayez.";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            var root = document.RootElement;
+
+            if (root.ValueKind == JsonValueKind.String)
+            {
+                return root.GetString() ?? "La création du compte a échoué.";
+            }
+
+            if (root.ValueKind == JsonValueKind.Array)
+            {
+                var messages = root.EnumerateArray()
+                    .Where(item => item.ValueKind == JsonValueKind.String)
+                    .Select(item => item.GetString())
+                    .Where(message => !string.IsNullOrWhiteSpace(message));
+                var combinedMessage = string.Join(" ", messages);
+                if (!string.IsNullOrWhiteSpace(combinedMessage))
+                {
+                    return combinedMessage;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            return content.Trim();
+        }
+
+        return "La création du compte a échoué. Vérifiez vos informations et réessayez.";
+    }
+
+    private async Task Logout()
+    {
+        await AuthProvider.MarkUserAsLoggedOutAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    private sealed class RegisterModalModel
+    {
+        [Required(ErrorMessage = "Le prénom est obligatoire.")]
+        public string Prenom { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le nom est obligatoire.")]
+        public string Nom { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "L'email est obligatoire.")]
+        [EmailAddress(ErrorMessage = "Format d'email invalide.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le mot de passe est obligatoire.")]
+        [MinLength(6, ErrorMessage = "Le mot de passe doit contenir au moins 6 caractères.")]
+        public string MotDePasse { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Veuillez confirmer votre mot de passe.")]
+        [Compare(nameof(MotDePasse), ErrorMessage = "Les mots de passe ne correspondent pas.")]
+        public string ConfirmationMotDePasse { get; set; } = string.Empty;
+    }
+}

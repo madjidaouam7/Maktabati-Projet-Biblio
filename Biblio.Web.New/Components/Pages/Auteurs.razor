@@ -1,0 +1,443 @@
+@page "/auteurs"
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Microsoft.AspNetCore.Authorization
+@using Biblio.Web.New.Authentication
+@using Biblio.Web.New.Components.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.ComponentModel.DataAnnotations
+@attribute [Authorize]
+@inject IHttpClientFactory HttpClientFactory
+@inject TokenProvider TokenProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Auteurs</PageTitle>
+
+<h1>Gestion des auteurs</h1>
+
+@if (_successMessage is not null)
+{
+    <div class="alert alert-success">
+        @_successMessage
+    </div>
+}
+
+<AuthorizeView Roles="Admin,Bibliothecaire">
+    <Authorized Context="authorizedContext">
+        <button class="btn btn-primary mb-3" @onclick="ToggleFormulaire">
+            @(_afficherFormulaire ? "Annuler" : "Ajouter un auteur")
+        </button>
+
+        <Modal Titre="@(idEnModification.HasValue ? "Modifier un auteur" : "Ajouter un auteur")"
+               Visible="@_afficherFormulaire" OnClose="FermerFormulaire">
+            <EditForm Model="_formModel" OnValidSubmit="EnregistrerFormulaire">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-2">
+                    <label>Nom</label>
+                    <InputText class="form-control" @bind-Value="_formModel.Nom" />
+                    <ValidationMessage For="@(() => _formModel.Nom)" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Prenom</label>
+                    <InputText class="form-control" @bind-Value="_formModel.Prenom" />
+                    <ValidationMessage For="@(() => _formModel.Prenom)" />
+                </div>
+
+                <div class="mb-2">
+                    <label for="date-naissance">Date de naissance</label>
+                    <InputDate id="date-naissance" class="form-control" @bind-Value="_formModel.DateNaissance" />
+                    <ValidationMessage For="@(() => _formModel.DateNaissance)" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(_createError))
+                {
+                    <div class="alert alert-danger">@_createError</div>
+                }
+
+                <button type="submit" class="btn btn-success" disabled="@_isCreating">
+                    @(_isCreating ? "Enregistrement..." : idEnModification.HasValue ? "Enregistrer les modifications" :
+                 "Ajouter l'auteur")
+                </button>
+                <button type="button" class="btn btn-outline-secondary ms-2" @onclick="FermerFormulaire">
+                    Annuler
+                </button>
+            </EditForm>
+        </Modal>
+    </Authorized>
+</AuthorizeView>
+
+<input type="text" class="form-control mb-3" style="max-width: 350px;" placeholder="Rechercher un auteur..."
+       @bind="_rechercheAuteur" @bind:event="oninput" />
+
+@if (_isLoading)
+{
+    <p><em>Chargement...</em></p>
+}
+else if (_errorMessage is not null)
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+else if (_auteurs is null || !_auteurs.Any())
+{
+    <p>Aucun auteur enregistré.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Date de naissance</th>
+                <AuthorizeView Roles="Admin,Bibliothecaire">
+                    <Authorized>
+                        <th>Actions</th>
+                    </Authorized>
+                </AuthorizeView>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var auteur in _auteurs.Where(a =>
+    string.IsNullOrWhiteSpace(_rechercheAuteur) ||
+    a.Nom.Contains(_rechercheAuteur, StringComparison.OrdinalIgnoreCase)))
+            {
+                <tr>
+                    <td>@auteur.Id</td>
+                    <td>@auteur.Nom</td>
+                    <td>@auteur.Prenom</td>
+                    <td>@auteur.DateNaissance?.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <AuthorizeView Roles="Admin,Bibliothecaire">
+                            <Authorized>
+                                <button class="btn btn-sm btn-primary"
+                                        @onclick="() => OuvrirModification(auteur)"><i class="bi bi-pencil-square"></i></button>
+                            </Authorized>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="Admin">
+                            <Authorized>
+                                <button class="btn btn-sm btn-danger"
+                                        @onclick="() => OuvrirConfirmationSuppression(auteur.Id, auteur.Nom)"><i class="bi bi-trash"></i></button>
+                            </Authorized>
+                        </AuthorizeView>
+                        <button class="btn btn-sm btn-secondary me-1" @onclick="() => VoirLivres(auteur.Id)">
+                            Voir livres
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (afficherConfirmation)
+{
+    <Modal Titre="Supprimer un auteur" Visible="@afficherConfirmation" OnClose="AnnulerConfirmation">
+        <p>Voulez-vous vraiment supprimer l'auteur <strong>@nomAConfirmer</strong> ?</p>
+        <p class="text-muted small">Cette action est irréversible.</p>
+        @if (_deleteError is not null)
+        {
+            <div class="alert alert-danger" role="alert">@_deleteError</div>
+        }
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" @onclick="AnnulerConfirmation"
+                    disabled="@_isDeleting">Annuler</button>
+            <button type="button" class="btn btn-danger" @onclick="ConfirmerSuppression" disabled="@_isDeleting">
+                @(_isDeleting ? "Suppression..." : "Supprimer")
+            </button>
+        </div>
+    </Modal>
+}
+
+@code {
+    private List<AuteurDto>? _auteurs;
+    private FormModel _formModel = new();
+    private string? _successMessage;
+    private string? _errorMessage;
+    private bool _isLoading = true;
+    private bool _isCreating;
+    private bool _isDeleting;
+    private string? _deleteError;
+    private bool _afficherFormulaire;
+    private string? _createError;
+    private int? idEnModification;
+    private bool afficherConfirmation;
+    private int idAConfirmer;
+    private string nomAConfirmer = string.Empty;
+    private string _rechercheAuteur = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerAuteurs();
+    }
+
+    private async Task ChargerAuteurs()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BiblioApi");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider.Token);
+
+            using var response = await client.GetAsync("api/auteurs");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _errorMessage = "Impossible de charger les auteurs.";
+                return;
+            }
+
+            var resultat = await response.Content.ReadFromJsonAsync<AuteursResponse>();
+            _auteurs = resultat?.Auteurs ?? new List<AuteurDto>();
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Une erreur est survenue lors du chargement.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleCreer()
+    {
+        _isCreating = true;
+        _createError = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BiblioApi");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider.Token);
+
+            using var response = await client.PostAsJsonAsync("api/auteurs", _formModel);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _createError = await ApiErrorMessageReader.ReadAsync(response, "Une erreur est survenue lors de l'ajout.");
+                return;
+            }
+
+            _successMessage = "Auteur ajouté avec succès";
+            _afficherFormulaire = false;
+            await ChargerAuteurs();
+            _ = FaireDisparaitreMessageSucces();
+        }
+        catch (Exception)
+        {
+            _createError = "Impossible de contacter le serveur.";
+        }
+        finally
+        {
+            _isCreating = false;
+        }
+    }
+
+    private async Task ModifierAuteurs()
+    {
+        if (!idEnModification.HasValue)
+        {
+            _createError = "Aucun livre n'est sélectionné pour la modification.";
+            return;
+        }
+
+        _isCreating = true;
+        _createError = null;
+        var id = idEnModification.Value;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BiblioApi");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider.Token);
+
+            using var response = await client.PutAsJsonAsync($"api/auteurs/{id}", _formModel);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _createError = await ApiErrorMessageReader.ReadAsync(response, "Une erreur est survenue lors de la modification.");
+                return;
+            }
+
+            _successMessage = "Auteur modifié avec succès";
+            _afficherFormulaire = false;
+            await ChargerAuteurs();
+            _ = FaireDisparaitreMessageSucces();
+        }
+        catch (Exception)
+        {
+            _createError = "Impossible de contacter le serveur.";
+        }
+        finally
+        {
+            _isCreating = false;
+        }
+    }
+
+    private void OuvrirModification(AuteurDto auteur)
+    {
+        idEnModification = auteur.Id;
+
+        _formModel = new FormModel
+        {
+            Nom = auteur.Nom,
+            Prenom = auteur.Prenom,
+            DateNaissance = auteur.DateNaissance
+        };
+
+        _createError = null;
+        _errorMessage = null;
+        _afficherFormulaire = true;
+    }
+
+
+    private async Task<bool> SupprimerAuteurs(int id)
+    {
+        if (_isDeleting)
+        {
+            return false;
+        }
+
+        _isDeleting = true;
+        _deleteError = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BiblioApi");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenProvider.Token);
+
+            using var response = await client.DeleteAsync($"api/auteurs/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _deleteError = await ApiErrorMessageReader.ReadAsync(response, "Une erreur est survenue lors de la suppression.");
+                return false;
+            }
+
+            _successMessage = "Auteur supprimé avec succès";
+            _afficherFormulaire = false;
+            await ChargerAuteurs();
+            _ = FaireDisparaitreMessageSucces();
+            return true;
+        }
+        catch (Exception)
+        {
+            _deleteError = "Impossible de contacter le serveur.";
+            return false;
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+
+    private void OuvrirConfirmationSuppression(int id, string nom)
+    {
+        idAConfirmer = id;
+        nomAConfirmer = nom;
+        _deleteError = null;
+        afficherConfirmation = true;
+    }
+
+    private void AnnulerConfirmation()
+    {
+        if (_isDeleting)
+        {
+            return;
+        }
+
+        afficherConfirmation = false;
+        idAConfirmer = 0;
+        nomAConfirmer = string.Empty;
+        _deleteError = null;
+    }
+
+    private async Task ConfirmerSuppression()
+    {
+        if (await SupprimerAuteurs(idAConfirmer))
+        {
+            AnnulerConfirmation();
+        }
+    }
+
+    private void VoirLivres(int auteurId)
+    {
+        Navigation.NavigateTo($"/livres?auteurId={auteurId}");
+    }
+
+
+
+
+
+
+
+    private void ToggleFormulaire()
+    {
+        _afficherFormulaire = !_afficherFormulaire;
+        _createError = null;
+        _errorMessage = null;
+        if (_afficherFormulaire)
+        {
+            _formModel = new FormModel();
+            idEnModification = null;
+        }
+    }
+
+    private void FermerFormulaire()
+    {
+        _afficherFormulaire = false;
+        _createError = null;
+        idEnModification = null;
+    }
+
+    private Task EnregistrerFormulaire()
+    {
+        return idEnModification.HasValue ? ModifierAuteurs() : HandleCreer();
+    }
+
+    private async Task FaireDisparaitreMessageSucces()
+    {
+        await Task.Delay(5000);
+
+        _successMessage = null;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    public class AuteurDto
+    {
+        public int Id { get; set; }
+        public string Nom { get; set; } = string.Empty;
+        public string Prenom { get; set; } = string.Empty;
+        public DateTime? DateNaissance { get; set; }
+    }
+    
+    public class AuteursResponse
+    {
+        public int Page { get; set; }
+        public int TaillePage { get; set; }
+        public int TotalElements { get; set; }
+        public int TotalPages { get; set; }
+        public List<AuteurDto> Auteurs { get; set; } = new();
+    }
+
+    private class FormModel
+    {
+        [Required(ErrorMessage = "Le nom est obligatoire.")]
+        [StringLength(100, ErrorMessage = "Le nom ne peut pas dépasser 100 caractères.")]
+        public string Nom { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le prénom est obligatoire.")]
+        [StringLength(100, ErrorMessage = "Le prénom ne peut pas dépasser 100 caractères.")]
+        public string Prenom { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La date de naissance est obligatoire.")]
+        public DateTime? DateNaissance { get; set; }
+    }
+}

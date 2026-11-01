@@ -1,0 +1,42 @@
+﻿@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@using Biblio.Web.New.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+
+<nav class="sidebar-nav" aria-label="Navigation principale">
+    <div class="nav-section-label">Bibliothèque</div>
+    <div class="nav-item">
+        <NavLink class="nav-link" href="accueil" Match="NavLinkMatch.All">
+            <i class="bi bi-house-door" aria-hidden="true"></i><span>Accueil</span>
+        </NavLink>
+    </div>
+
+    <AuthorizeView Roles="Admin,Bibliothecaire,Lecteur">
+        <Authorized>
+            <div class="nav-section-label nav-section-spaced">Catalogue et suivi</div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="livres">
+                    <i class="bi bi-journal-bookmark" aria-hidden="true"></i><span>Livres</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item">
+                <NavLink class="nav-link" href="auteurs">
+                    <i class="bi bi-pen" aria-hidden="true"></i><span>Auteurs</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item">
+                <NavLink class="nav-link" href="categories">
+                    <i class="bi bi-bookmarks" aria-hidden="true"></i><span>Catégories</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item">
+                <NavLink class="nav-link" href="emprunts">
+                    <i class="bi bi-arrow-left-right" aria-hidden="true"></i><span>Emprunts</span>
+                </NavLink>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</nav>

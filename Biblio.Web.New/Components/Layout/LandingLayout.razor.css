@@ -1,0 +1,514 @@
+.landing-layout {
+    --ink: #3b2418;
+    --wood: #75452b;
+    --paper: #e8d8c3;
+    --paper-light: #fffcf7;
+    --terracotta: #d96336;
+    --terracotta-dark: #bd4d27;
+    --sage: #355c4a;
+    --gold: #e8b85a;
+    --muted: #746b60;
+    --line: #e5d9c9;
+
+    min-height: 100vh;
+    color: var(--ink);
+    background: var(--paper-light);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.landing-layout .site-header {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+    border-bottom: 1px solid rgba(117, 69, 43, 0.14);
+    background: rgba(255, 252, 247, 0.96);
+}
+
+.landing-layout .header-inner {
+    display: flex;
+    min-height: 82px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.landing-layout ::deep .brand {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.landing-layout .brand-mark {
+    width: 35px;
+    height: 35px;
+    fill: none;
+    stroke: var(--terracotta);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+}
+
+.landing-layout .brand-word {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.06em;
+}
+
+.landing-layout .brand-period {
+    color: var(--terracotta);
+}
+
+.landing-layout .primary-nav {
+    align-items: center;
+    gap: clamp(1.2rem, 2vw, 2.1rem);
+}
+
+.landing-layout ::deep .primary-nav a,
+.landing-layout ::deep .mobile-navigation-panel a {
+    position: relative;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 160ms ease;
+}
+
+.landing-layout ::deep .primary-nav a::after {
+    position: absolute;
+    right: 0;
+    bottom: -0.45rem;
+    left: 0;
+    height: 1px;
+    background: var(--terracotta);
+    content: "";
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 180ms ease;
+}
+
+.landing-layout ::deep .primary-nav a:hover,
+.landing-layout ::deep .primary-nav a.active,
+.landing-layout ::deep .mobile-navigation-panel a:hover,
+.landing-layout ::deep .mobile-navigation-panel a.active {
+    color: var(--ink);
+}
+
+.landing-layout ::deep .primary-nav a:hover::after,
+.landing-layout ::deep .primary-nav a.active::after {
+    transform: scaleX(1);
+}
+
+.landing-layout .header-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1.15rem;
+}
+
+.landing-layout ::deep .header-login {
+    display: inline-flex;
+    min-height: 2.7rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.landing-layout ::deep .header-cta {
+    display: inline-flex;
+    min-height: 2.7rem;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    background: var(--terracotta);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition: background-color 160ms ease, transform 160ms ease;
+    cursor: pointer;
+}
+
+.landing-layout ::deep .header-cta:hover {
+    transform: translateY(-1px);
+    background: var(--terracotta-dark);
+}
+
+.landing-layout ::deep .header-cta svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.6;
+}
+
+.landing-layout .mobile-navigation {
+    position: relative;
+}
+
+.landing-layout .mobile-navigation-toggle {
+    display: flex;
+    width: 42px;
+    height: 42px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+}
+
+.landing-layout .mobile-navigation-toggle span {
+    width: 17px;
+    height: 1px;
+    background: var(--ink);
+    transition: transform 160ms ease;
+}
+
+.landing-layout .mobile-navigation-toggle[aria-expanded="true"] span:first-child {
+    transform: translateY(3.5px) rotate(45deg);
+}
+
+.landing-layout .mobile-navigation-toggle[aria-expanded="true"] span:last-child {
+    transform: translateY(-3.5px) rotate(-45deg);
+}
+
+.landing-layout .mobile-navigation-panel {
+    position: absolute;
+    top: calc(100% + 1rem);
+    right: 0;
+    display: flex;
+    width: min(18rem, calc(100vw - 2rem));
+    flex-direction: column;
+    gap: 0;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--line);
+    background: var(--paper-light);
+    box-shadow: 0 14px 28px rgba(59, 36, 24, 0.12);
+}
+
+.landing-layout ::deep .mobile-navigation-panel a,
+.landing-layout .mobile-auth-button,
+.landing-layout .mobile-logout {
+    display: block;
+    padding: 0.9rem 0.2rem;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.88rem;
+    text-align: left;
+    text-decoration: none;
+}
+
+.landing-layout .mobile-auth-button {
+    width: 100%;
+    cursor: pointer;
+}
+
+.landing-layout .mobile-register-button {
+    color: var(--terracotta);
+    font-weight: 700;
+}
+
+.landing-layout .mobile-navigation-panel > :last-child {
+    border-bottom: 0;
+}
+
+.landing-layout .site-footer {
+    background: #2b1d15;
+    color: #e8d8c3;
+}
+
+.landing-layout .footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 3rem;
+    padding-top: 3.5rem;
+    padding-bottom: 3rem;
+}
+
+.landing-layout ::deep .footer-brand-link {
+    color: var(--paper-light);
+}
+
+.landing-layout .footer-brand p {
+    max-width: 300px;
+    margin: 1rem 0 0;
+    color: #c0ad99;
+    font-size: 0.84rem;
+    line-height: 1.7;
+}
+
+.landing-layout .footer-links {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.landing-layout .footer-links h2 {
+    margin: 0 0 0.3rem;
+    color: var(--gold);
+    font-size: 0.69rem;
+    font-weight: 750;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.landing-layout ::deep .footer-links a {
+    color: #e8d8c3;
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: color 160ms ease;
+}
+
+.landing-layout ::deep .footer-links a:hover {
+    color: var(--gold);
+}
+
+.landing-layout .footer-auth-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #e8d8c3;
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.landing-layout .footer-auth-button:hover {
+    color: var(--gold);
+}
+
+.landing-layout .footer-bottom {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid rgba(232, 216, 195, 0.16);
+    color: #b8a590;
+    font-size: 0.72rem;
+}
+
+.landing-layout .auth-modal-backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    overflow-y: auto;
+    padding: 1.5rem;
+    place-items: center;
+    background: rgba(31, 22, 16, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.landing-layout .auth-modal {
+    position: relative;
+    width: min(100%, 520px);
+    max-height: min(90vh, 820px);
+    overflow-y: auto;
+    padding: clamp(1.6rem, 5vw, 2.6rem);
+    border: 1px solid rgba(117, 69, 43, 0.16);
+    background: var(--paper-light);
+    box-shadow: 0 24px 80px rgba(31, 22, 16, 0.25);
+}
+
+.landing-layout .auth-modal-close {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+
+.landing-layout .auth-modal-close:hover {
+    background: var(--ink);
+    color: var(--paper-light);
+}
+
+.landing-layout .auth-modal-eyebrow {
+    margin: 0 2rem 0.65rem 0;
+    color: var(--terracotta);
+    font-size: 0.68rem;
+    font-weight: 750;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.landing-layout .auth-modal h2 {
+    margin: 0;
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 7vw, 2.7rem);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+}
+
+.landing-layout .auth-modal-intro {
+    margin: 0.65rem 0 1.6rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.landing-layout .auth-modal .form-label {
+    color: var(--ink);
+    font-size: 0.8rem;
+    font-weight: 650;
+}
+
+.landing-layout ::deep .auth-modal .form-control {
+    min-height: 2.9rem;
+    border-color: var(--line);
+    border-radius: 0;
+    background-color: #fff;
+    color: var(--ink);
+}
+
+.landing-layout ::deep .auth-modal .form-control:focus {
+    border-color: var(--wood);
+    box-shadow: 0 0 0 0.2rem rgba(117, 69, 43, 0.14);
+}
+
+.landing-layout .auth-modal .form-text,
+.landing-layout .auth-modal-switch {
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.landing-layout .auth-submit {
+    display: block;
+    width: 100%;
+    min-height: 3rem;
+    border: 0;
+    background: var(--terracotta);
+    color: #fff;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 160ms ease;
+}
+
+.landing-layout .auth-submit:hover:not(:disabled) {
+    background: var(--terracotta-dark);
+}
+
+.landing-layout .auth-submit:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.landing-layout .auth-modal-switch {
+    margin: 1.25rem 0 0;
+    text-align: center;
+}
+
+.landing-layout .auth-modal-switch button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--wood);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.landing-layout ::deep a:focus-visible,
+.landing-layout button:focus-visible {
+    outline: 3px solid var(--terracotta);
+    outline-offset: 4px;
+}
+
+@media (max-width: 575.98px) {
+    .landing-layout .header-inner {
+        min-height: 70px;
+        gap: 0.65rem;
+    }
+
+    .landing-layout .brand-mark {
+        width: 30px;
+        height: 30px;
+    }
+
+    .landing-layout .brand-word {
+        font-size: 1.55rem;
+    }
+
+    .landing-layout .header-actions {
+        gap: 0.35rem;
+    }
+
+    .landing-layout .header-login {
+        min-height: 2.5rem;
+        padding: 0.4rem 0.2rem;
+        font-size: 0.72rem;
+    }
+
+    .landing-layout .mobile-navigation-toggle {
+        width: 38px;
+        height: 38px;
+    }
+
+    .landing-layout .footer-main {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem 1rem;
+        padding-top: 2.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .landing-layout .footer-brand {
+        grid-column: 1 / -1;
+    }
+
+    .landing-layout .footer-bottom {
+        min-height: 64px;
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.2rem;
+    }
+
+    .landing-layout .auth-modal-backdrop {
+        padding: 0.75rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-layout *,
+    .landing-layout *::before,
+    .landing-layout *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

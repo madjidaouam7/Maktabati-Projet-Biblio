@@ -1,0 +1,349 @@
+@page "/"
+@layout HomeLayout
+@implements IDisposable
+
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Biblio.Web.New.DTOs
+@using Biblio.Web.New.Authentication
+
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Accueil - Maktabati</PageTitle>
+
+
+<div class="maktabati-home">
+
+    <!-- Barre de navigation -->
+    <header class="home-navbar">
+        <div class="home-container navbar-content">
+
+            <a href="/" class="home-brand">
+                <span class="brand-icon">📚</span>
+                <span>Maktabati</span>
+            </a>
+
+            <div class="navbar-actions">
+                <button type="button" class="home-btn home-btn-outline home-btn-small" @onclick="OpenLoginModal">
+                    Se connecter
+                </button>
+
+                <button type="button" class="home-btn home-btn-primary home-btn-small" @onclick="OpenRegisterModal">
+                    S'inscrire
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Section principale -->
+    <main>
+        <section class="home-hero" aria-labelledby="home-title">
+
+            <div class="home-container hero-grid">
+
+                <div class="hero-content">
+
+                    <div class="hero-label">
+                        <span>✦</span>
+                        Votre bibliothèque numérique
+                    </div>
+
+                    <h1 id="home-title">
+                        Chaque livre ouvre
+                        <span>un nouvel horizon.</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        Bienvenue chez Maktabati, votre espace dédié
+                        à la lecture et à la découverte.
+                        Explorez notre catalogue, découvrez de nouveaux
+                        ouvrages et profitez d'une expérience
+                        de bibliothèque simple et agréable.
+                    </p>
+
+                    <div class="hero-actions">
+                        <button type="button" class="home-btn home-btn-primary" @onclick="OpenRegisterModal">
+                            Commencer l'aventure
+                            <span aria-hidden="true">→</span>
+                        </button>
+
+                        <button type="button" class="home-btn home-btn-outline" @onclick="OpenLoginModal">
+                            J'ai déjà un compte
+                        </button>
+                    </div>
+
+                    <div class="hero-note">
+                        <span>✦</span>
+                        Un monde de connaissances à portée de clic
+                    </div>
+
+                </div>
+
+                <div class="hero-visual">
+                    <img src="/images/library-hero.jpg" alt="Bibliothèque chaleureuse avec des étagères de livres"
+                         class="hero-image" />
+
+                    <div class="hero-image-caption">
+                        <span class="caption-icon">📖</span>
+                        <div>
+                            <strong>Votre prochaine lecture</strong>
+                            <small>commence ici</small>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Avantages -->
+        <section class="home-features">
+            <div class="home-container">
+
+                <div class="features-heading">
+                    <span class="features-eyebrow">POUR LES PASSIONNÉS DE LECTURE</span>
+                    <h2>Une bibliothèque pensée pour vous</h2>
+                    <p>Découvrez une nouvelle façon de profiter de vos lectures.</p>
+                </div>
+
+                <div class="features-grid">
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Découvrez des ouvrages</h3>
+                        <p>
+                            Explorez un catalogue de livres
+                            et trouvez vos prochaines lectures.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔎</div>
+                        <h3>Recherchez facilement</h3>
+                        <p>
+                            Retrouvez les livres qui vous intéressent
+                            grâce à une navigation simple.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🌿</div>
+                        <h3>Votre espace personnel</h3>
+                        <p>
+                            Connectez-vous à votre compte pour
+                            profiter des services de la bibliothèque.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Pied de page -->
+    <footer class="home-footer">
+        <div class="home-container footer-content">
+            <span>📚 Maktabati</span>
+            <span>Votre univers de lecture.</span>
+        </div>
+    </footer>
+
+</div>
+
+
+@if (showLoginModal)
+{
+    <div class="login-backdrop" @onclick="CloseLoginModal" @onkeydown="HandleModalKeyDown" role="presentation"
+         tabindex="-1">
+
+        <section class="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title"
+                 @onclick:stopPropagation="true">
+
+            <div class="login-modal-header">
+                <div>
+                    <h2 id="login-title">Connexion</h2>
+                    <p>Connectez-vous à votre espace Maktabati.</p>
+                </div>
+
+                <button type="button" class="login-close" aria-label="Fermer" disabled="@isLoading"
+                        @onclick="CloseLoginModal">
+                    &times;
+                </button>
+            </div>
+
+            <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin" FormName="HomeLoginForm">
+
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="login-email" class="form-label">Email</label>
+                    <InputText id="login-email" class="form-control" type="email" autocomplete="email"
+                               @bind-Value="loginModel.Email" />
+                    <ValidationMessage For="@(() => loginModel.Email)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="login-password" class="form-label">
+                        Mot de passe
+                    </label>
+                    <InputText id="login-password" type="password" class="form-control" autocomplete="current-password"
+                               @bind-Value="loginModel.MotDePasse" />
+                    <ValidationMessage For="@(() => loginModel.MotDePasse)" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert alert-danger py-2" role="alert">
+                        @errorMessage
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                    @(isLoading ? "Connexion en cours..." : "Se connecter")
+                </button>
+            </EditForm>
+            <p class="text-center text-secondary mt-4 mb-0">
+                Pas encore de compte ?
+                <button type="button" class="btn btn-link p-0 fw-semibold" @onclick="SwitchToRegister">
+                    Créer un compte
+                </button>
+            </p>
+        </section>
+    </div>
+}
+
+<RegisterModal IsOpen="@showRegisterModal" OnClose="@CloseRegisterModal" OnLoginClick="@SwitchToLogin" />
+@code {
+    private bool _disposed;
+    private bool showLoginModal;
+    private bool isLoading;
+    private string? errorMessage;
+    private LoginDto loginModel = new();
+    private bool showRegisterModal;
+
+    private void OpenRegisterModal()
+    {
+        showRegisterModal = true;
+    }
+
+    private void CloseRegisterModal()
+    {
+        showRegisterModal = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthProvider.AuthenticationStateChanged += HandleAuthenticationStateChanged;
+        await RedirectIfAuthenticatedAsync(AuthProvider.GetAuthenticationStateAsync());
+    }
+
+    private void OpenLoginModal()
+    {
+        loginModel = new LoginDto();
+        errorMessage = null;
+        showLoginModal = true;
+    }
+
+    private void CloseLoginModal()
+    {
+        if (isLoading)
+            return;
+
+        showLoginModal = false;
+        errorMessage = null;
+    }
+
+    private void SwitchToRegister()
+    {
+        showLoginModal = false;
+        errorMessage = null;
+        showRegisterModal = true;
+    }
+
+    private void SwitchToLogin()
+    {
+        showRegisterModal = false;
+        showLoginModal = true;
+    }
+
+    private void HandleModalKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+            CloseLoginModal();
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BiblioApi");
+
+            var response = await client.PostAsJsonAsync(
+                "api/auth/login",
+                loginModel);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = "Email ou mot de passe incorrect.";
+                return;
+            }
+
+            var authResponse =
+                await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+
+            if (authResponse is null ||
+                string.IsNullOrWhiteSpace(authResponse.Token))
+            {
+                errorMessage = "La réponse de l'API est invalide.";
+                return;
+            }
+
+            await AuthProvider.MarkUserAsAuthenticatedAsync(
+                authResponse.Token);
+
+            showLoginModal = false;
+            Navigation.NavigateTo("/accueil", replace: true);
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "Impossible de contacter l'API. Vérifie qu'elle est démarrée.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleAuthenticationStateChanged(
+        Task<AuthenticationState> authenticationStateTask)
+    {
+        _ = RedirectIfAuthenticatedAsync(authenticationStateTask);
+    }
+
+    private async Task RedirectIfAuthenticatedAsync(
+        Task<AuthenticationState> authenticationStateTask)
+    {
+        var authenticationState = await authenticationStateTask;
+
+        if (!_disposed &&
+            authenticationState.User.Identity?.IsAuthenticated == true)
+        {
+            await InvokeAsync(() =>
+                Navigation.NavigateTo("/accueil", replace: true));
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        AuthProvider.AuthenticationStateChanged -= HandleAuthenticationStateChanged;
+    }
+}

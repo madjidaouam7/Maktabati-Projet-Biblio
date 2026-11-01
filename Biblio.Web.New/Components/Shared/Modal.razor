@@ -1,0 +1,32 @@
+@if (Visible)
+{
+    <div class="app-modal-overlay" role="presentation" @onclick="HandleOverlayClick">
+        <section class="app-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" @onclick:stopPropagation="true">
+            <header class="app-modal-header">
+                <h2 id="modal-title">@Titre</h2>
+                <button type="button" class="app-modal-close" aria-label="Fermer" @onclick="Close">&times;</button>
+            </header>
+            <div class="app-modal-body">
+                @ChildContent
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Titre { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private Task Close() => OnClose.InvokeAsync();
+
+    private Task HandleOverlayClick() => Close();
+}

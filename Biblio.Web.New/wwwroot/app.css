@@ -1,0 +1,340 @@
+:root {
+    --color-forest: #24483B;
+    --color-ivory: #F6F3EC;
+    --color-gold: #D5B98C;
+    --color-ink: #26342D;
+    --color-muted: #69756E;
+    --color-surface: #FFFEFB;
+    --color-border: #E5E0D5;
+    --shadow-soft: 0 0.6rem 1.8rem rgb(36 72 59 / 7%);
+    --font-body: 'Inter', 'Segoe UI', sans-serif;
+    --font-display: 'Playfair Display', Georgia, serif;
+}
+
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+    color: var(--color-ink);
+    background: var(--color-ivory);
+    font-family: var(--font-body);
+    font-size: 0.96rem;
+    line-height: 1.55;
+}
+
+a {
+    color: var(--color-forest);
+}
+
+h1,
+h2,
+h3 {
+    color: var(--color-forest);
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+
+h1 {
+    margin: 0 0 1.25rem;
+    font-size: clamp(1.8rem, 3vw, 2.45rem);
+    letter-spacing: -0.035em;
+}
+
+.page-heading h1 {
+    margin: 0;
+}
+
+.page-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.page-description {
+    margin: 0.4rem 0 0;
+    color: var(--color-muted);
+}
+
+.book-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.9rem;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+}
+
+.book-view-switches,
+.book-search-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.book-search-tools {
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.book-search {
+    position: relative;
+    flex: 1;
+    max-width: 24rem;
+}
+
+.book-search > i {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    z-index: 1;
+    color: var(--color-muted);
+    transform: translateY(-50%);
+}
+
+.book-search .form-control {
+    padding-left: 2.5rem;
+}
+
+.book-filter-menu {
+    right: 0;
+    left: auto;
+    min-width: 16rem;
+}
+
+.btn {
+    min-height: 2.55rem;
+    padding: 0.55rem 1rem;
+    border-radius: 0.7rem;
+    font-weight: 600;
+    transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.btn-sm {
+    min-height: 2rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.55rem;
+    font-size: 0.82rem;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0.35rem 0.9rem rgb(36 72 59 / 12%);
+}
+
+.btn-primary,
+.btn-success {
+    color: #fff;
+    background: var(--color-forest);
+    border-color: var(--color-forest);
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+    color: #fff;
+    background: #1b392f;
+    border-color: #1b392f;
+}
+
+.btn-secondary {
+    color: var(--color-forest);
+    background: #E9E5DB;
+    border-color: #E9E5DB;
+}
+
+.btn-outline-secondary {
+    color: var(--color-forest);
+    border-color: #C7CFC7;
+}
+
+.btn-outline-secondary:hover {
+    color: var(--color-forest);
+    background: #EAE8DF;
+    border-color: #C7CFC7;
+}
+
+.btn-outline-danger {
+    color: #8A4B43;
+    border-color: #D7B5AE;
+}
+
+.btn-outline-danger:hover {
+    color: #fff;
+    background: #8A4B43;
+    border-color: #8A4B43;
+}
+
+.btn-warning {
+    color: var(--color-forest);
+    background: var(--color-gold);
+    border-color: var(--color-gold);
+}
+
+.btn-warning:hover {
+    color: var(--color-forest);
+    background: #C9AA78;
+    border-color: #C9AA78;
+}
+
+.form-control,
+.form-select {
+    min-height: 2.75rem;
+    border: 1px solid #DADFD8;
+    border-radius: 0.7rem;
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus,
+.btn:focus-visible {
+    border-color: var(--color-forest);
+    box-shadow: 0 0 0 0.2rem rgb(36 72 59 / 16%);
+}
+
+label,
+.form-label {
+    margin-bottom: 0.4rem;
+    color: var(--color-ink);
+    font-weight: 600;
+}
+
+.table {
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 0.9rem;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+    color: var(--color-ink);
+}
+
+.table > :not(caption) > * > * {
+    padding: 0.9rem 1rem;
+    border-bottom-color: #EEEAE2;
+}
+
+.table thead th {
+    background: #EFEEE7;
+    color: var(--color-forest);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.table.table > thead > tr > th {
+    background-color: #EFEEE7;
+}
+
+.table tbody tr:last-child > * {
+    border-bottom: 0;
+}
+
+.table-hover > tbody > tr:hover > * {
+    background: #F8F6F0;
+    color: var(--color-ink);
+}
+
+.dropdown-menu {
+    border: 1px solid var(--color-border);
+    border-radius: 0.8rem;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+}
+
+.app-modal-body .mb-2 {
+    margin-bottom: 0.95rem !important;
+}
+
+.alert {
+    border: 1px solid transparent;
+    border-radius: 0.8rem;
+}
+
+.alert-success {
+    color: #24483B;
+    background: #E7EFE8;
+    border-color: #D4E3D7;
+}
+
+.validation-message {
+    margin-top: 0.25rem;
+    color: #A34238;
+    font-size: 0.86rem;
+}
+
+.invalid {
+    outline: 1px solid #A34238;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #4E8060;
+}
+
+.blazor-error-boundary {
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+    background: #8A302C;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
+
+.darker-border-checkbox.form-check-input {
+    border-color: #929292;
+}
+
+@media (max-width: 640px) {
+    .page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .book-toolbar,
+    .book-view-switches,
+    .book-search-tools {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .book-view-switches,
+    .book-search-tools,
+    .book-search {
+        width: 100%;
+        max-width: none;
+    }
+
+    .book-filter-menu {
+        right: auto;
+        left: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

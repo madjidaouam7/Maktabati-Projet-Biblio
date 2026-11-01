@@ -1,0 +1,163 @@
+@page "/accueil"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+
+<PageTitle>Tableau de bord</PageTitle>
+
+<div class="container-fluid py-4">
+
+    <AuthorizeView>
+        <Authorized Context="auth">
+
+            <h1 class="mb-2">Tableau de bord</h1>
+            <p class="text-muted mb-4">
+                Bienvenue dans votre espace de gestion de bibliothèque.
+            </p>
+
+            @if (auth.User.IsInRole("Admin"))
+            {
+                <h3 class="mb-3">Espace administrateur</h3>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-book fs-2 text-primary"></i>
+                                <h5 class="mt-3">Livres</h5>
+                                <p class="text-muted">Gérer le catalogue.</p>
+                                <a href="/livres" class="btn btn-primary">
+                                    Gérer les livres
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-person-lines-fill fs-2 text-primary"></i>
+                                <h5 class="mt-3">Auteurs</h5>
+                                <p class="text-muted">Gérer les auteurs.</p>
+                                <a href="/auteurs" class="btn btn-primary">
+                                    Gérer les auteurs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-tags fs-2 text-primary"></i>
+                                <h5 class="mt-3">Catégories</h5>
+                                <p class="text-muted">Organiser le catalogue.</p>
+                                <a href="/categories" class="btn btn-primary">
+                                    Gérer les catégories
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-arrow-left-right fs-2 text-primary"></i>
+                                <h5 class="mt-3">Emprunts</h5>
+                                <p class="text-muted">Consulter et gérer les emprunts.</p>
+                                <a href="/emprunts" class="btn btn-primary">
+                                    Gérer les emprunts
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (auth.User.IsInRole("Bibliothecaire"))
+            {
+                <h3 class="mb-3">Espace bibliothécaire</h3>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-book fs-2 text-primary"></i>
+                                <h5 class="mt-3">Catalogue</h5>
+                                <p class="text-muted">Consulter les livres et leur disponibilité.</p>
+                                <a href="/livres" class="btn btn-primary">
+                                    Voir les livres
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-arrow-left-right fs-2 text-primary"></i>
+                                <h5 class="mt-3">Emprunts</h5>
+                                <p class="text-muted">Enregistrer les emprunts et les retours.</p>
+                                <a href="/emprunts" class="btn btn-primary">
+                                    Gérer les emprunts
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-tags fs-2 text-primary"></i>
+                                <h5 class="mt-3">Catalogue détaillé</h5>
+                                <p class="text-muted">Accéder aux auteurs et catégories.</p>
+                                <a href="/auteurs" class="btn btn-primary">
+                                    Voir les auteurs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (auth.User.IsInRole("Lecteur"))
+            {
+                <h3 class="mb-3">Mon espace lecteur</h3>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-search fs-2 text-primary"></i>
+                                <h5 class="mt-3">Catalogue</h5>
+                                <p class="text-muted">Découvrir les livres disponibles.</p>
+                                <a href="/livres" class="btn btn-primary">
+                                    Explorer les livres
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <i class="bi bi-journal-check fs-2 text-primary"></i>
+                                <h5 class="mt-3">Mes emprunts</h5>
+                                <p class="text-muted">Consulter mes emprunts et mes dates de retour.</p>
+                                <a href="/emprunts" class="btn btn-primary">
+                                    Voir mes emprunts
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    Votre rôle n'est pas reconnu. Contactez l'administrateur.
+                </div>
+            }
+
+        </Authorized>
+    </AuthorizeView>
+
+</div>

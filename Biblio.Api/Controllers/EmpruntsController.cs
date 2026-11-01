@@ -14,17 +14,15 @@ namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class EmpruntsController : ControllerBase
     {
-        //private readonly IEmpruntService _empruntService;
         private readonly IMediator _mediator;
 
         private readonly UserManager<Utilisateur> _userManager;
 
-        public EmpruntsController(/*IEmpruntService empruntService*/IMediator mediator, UserManager<Utilisateur> userManager)
+        public EmpruntsController(IMediator mediator, UserManager<Utilisateur> userManager)
         {
-            //_empruntService = empruntService;
             _mediator = mediator;
             _userManager = userManager;
         }

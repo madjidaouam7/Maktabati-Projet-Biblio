@@ -1,86 +1,39 @@
-﻿@page "/"
-@using Biblio.Web.Services
-@inject LivreService LivreService
-@inject AuteurService AuteurService
-@inject CategorieService CategorieService
-@inject EmpruntService EmpruntService
+@page "/"
+@layout Biblio.Web.Components.Layout.PublicLayout
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>Bienvenue - Biblio</PageTitle>
 
-<h1>Dashboard</h1>
+<section class="container py-5">
+    <div class="row align-items-center min-vh-75">
+        <div class="col-lg-7 py-5">
+            <span class="badge bg-primary-subtle text-primary mb-3">
+                Bibliothèque numérique
+            </span>
 
-@if (chargement)
-{
-    <p><em>Chargement...</em></p>
-}
-else
-{
-    <div class="row">
-        <div class="col-md-3 mb-3">
-            <NavLink href="livres" class="text-decoration-none">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Livres</h5>
-                    <p class="card-text fs-2">@nombreLivres</p>
-                </div>
+            <h1 class="display-4 fw-bold mb-4">
+                Découvrez, empruntez et gérez
+                vos livres facilement.
+            </h1>
+
+            <p class="lead text-secondary mb-4">
+                Explorez notre catalogue, consultez les livres disponibles
+                et gérez vos emprunts et réservations depuis une seule plateforme.
+            </p>
+
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="/register" class="btn btn-primary btn-lg px-4">
+                    Commencer
+                </a>
+
+                <a href="/login" class="btn btn-outline-primary btn-lg px-4">
+                    Se connecter
+                </a>
             </div>
-            </NavLink>
         </div>
 
-        <div class="col-md-3 mb-3">
-            <NavLink href="auteurs" class="text-decoration-none">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Auteurs</h5>
-                    <p class="card-text fs-2">@nombreAuteurs</p>
-                </div>
-            </div>
-            </NavLink>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <NavLink href="categories" class="text-decoration-none">
-            <div class="card text-white bg-warning">
-                <div class="card-body">
-                    <h5 class="card-title">Catégories</h5>
-                    <p class="card-text fs-2">@nombreCategories</p>
-                </div>
-            </div>
-            </NavLink>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <NavLink href="emprunts" class="text-decoration-none">
-            <div class="card text-white bg-danger">
-                <div class="card-body">
-                    <h5 class="card-title">Emprunts actifs</h5>
-                    <p class="card-text fs-2">@nombreEmpruntsActifs</p>
-                </div>
-            </div>
-            </NavLink>
+        <div class="col-lg-5 text-center">
+            <div class="display-1">📚</div>
+            <h3 class="fw-bold mt-3">Votre bibliothèque, partout.</h3>
         </div>
     </div>
-}
-
-@code {
-    private bool chargement = true;
-    private int nombreLivres;
-    private int nombreAuteurs;
-    private int nombreCategories;
-    private int nombreEmpruntsActifs;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var livres = await LivreService.GetLivresAsync();
-        var auteurs = await AuteurService.GetAuteursAsync();
-        var categories = await CategorieService.GetCategoriesAsync();
-        var emprunts = await EmpruntService.GetEmpruntsActifsAsync();
-
-        nombreLivres = livres.Count;
-        nombreAuteurs = auteurs.Count;
-        nombreCategories = categories.Count;
-        nombreEmpruntsActifs = emprunts.Count;
-
-        chargement = false;
-    }
-}
+</section>

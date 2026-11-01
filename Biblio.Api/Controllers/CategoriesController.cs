@@ -12,17 +12,10 @@ namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize] // s'applique par défaut à TOUTES les actions du Controller
+    [Authorize] // s'applique par défaut à TOUTES les actions du Controller
     public class CategoriesController : ControllerBase
     {
-        //private readonly ICategorieService _categorieService;
         private readonly IMediator _mediator;
-
-        /*public CategoriesController(ICategorieService categorieService)
-        {
-            _categorieService = categorieService;
-        }*/
-
         public CategoriesController(IMediator mediator)
         {
             _mediator = mediator;

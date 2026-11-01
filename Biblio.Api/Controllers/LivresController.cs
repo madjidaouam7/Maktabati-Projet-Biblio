@@ -12,17 +12,10 @@ namespace Biblio.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class LivresController : ControllerBase
     {
-        //private readonly ILivreService _livreService;
         private readonly IMediator _mediator;
-
-        /*public LivresController(ILivreService livreService)
-        {
-            _livreService = livreService;
-        }*/
-
         public LivresController(IMediator mediator)
         {
             _mediator = mediator;

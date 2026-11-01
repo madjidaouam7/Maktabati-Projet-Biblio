@@ -1,10 +1,9 @@
 ﻿@using Biblio.Web.Services
 @inject EtatAuthService EtatAuth
 
-
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Biblio.Web</a>
+        <a class="navbar-brand" href="/accueil">Biblio</a>
     </div>
 </div>
 
@@ -12,68 +11,78 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
+
+        @* Accueil du tableau de bord *@
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Dashboard
+            <NavLink class="nav-link" href="accueil">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
+                Dashboard
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="livres">
-                <span class="bi bi-book-fill-nav-menu" aria-hidden="true"></span> Livres
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auteurs">
-                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Auteurs
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="categories">
-                <span class="bi bi-tags-fill-nav-menu" aria-hidden="true"></span> Categories
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="emprunts">
-                <span class="bi bi-journal-bookmark-fill-nav-menu" aria-hidden="true"></span> Emprunts
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="login">
-                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Connexion
-            </NavLink>
-        </div>
-
+        @* Fonctionnalités communes *@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="livres-disponibles">
-                <span class="bi bi-check-circle-fill-nav-menu" aria-hidden="true"></span> Livres disponibles
+                <span class="bi bi-check-circle-fill-nav-menu" aria-hidden="true"></span>
+                Livres disponibles
             </NavLink>
         </div>
 
-
-        @if (EtatAuth.Roles.Contains("Admin"))
+        @* Gestion du catalogue : Admin et Bibliothécaire *@
+        @if (EtatAuth.Roles.Contains("Admin") ||
+             EtatAuth.Roles.Contains("Bibliothecaire"))
         {
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="gestion-utilisateurs">
-                    <span class="bi bi-person-plus-fill-nav-menu" aria-hidden="true"></span> Gestion utilisateurs
+                <NavLink class="nav-link" href="livres">
+                    <span class="bi bi-book-fill-nav-menu" aria-hidden="true"></span>
+                    Gestion des livres
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="auteurs">
+                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span>
+                    Auteurs
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="categories">
+                    <span class="bi bi-tags-fill-nav-menu" aria-hidden="true"></span>
+                    Catégories
                 </NavLink>
             </div>
         }
 
-
+        @* Emprunts : visibles pour les trois rôles *@
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="reservations">
-                <span class="bi bi-bookmark-fill-nav-menu" aria-hidden="true"></span> Réservations
+            <NavLink class="nav-link" href="emprunts">
+                <span class="bi bi-journal-bookmark-fill-nav-menu" aria-hidden="true"></span>
+                Emprunts
             </NavLink>
         </div>
+
+        @* Réservations : visibles pour les trois rôles *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="reservations">
+                <span class="bi bi-bookmark-fill-nav-menu" aria-hidden="true"></span>
+                Réservations
+            </NavLink>
+        </div>
+
+        @* Administration réservée à l'Admin *@
+        @if (EtatAuth.Roles.Contains("Admin"))
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="gestion-utilisateurs">
+                    <span class="bi bi-person-plus-fill-nav-menu" aria-hidden="true"></span>
+                    Gestion des utilisateurs
+                </NavLink>
+            </div>
+        }
+
     </nav>
 </div>
-
-
 
 @implements IDisposable
 
@@ -93,3 +102,4 @@
         EtatAuth.OnChange -= RafraichirMenu;
     }
 }
+```
