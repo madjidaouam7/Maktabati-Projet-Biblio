@@ -19,9 +19,12 @@ if (string.IsNullOrWhiteSpace(jwtSigningKey))
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+var apiBaseUrl = builder.Configuration["Api:BaseUrl"]
+    ?? "http://localhost:5117/";
+
 builder.Services.AddHttpClient("BiblioApi", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5117/");
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
 
 builder.Services.AddAuthorization();

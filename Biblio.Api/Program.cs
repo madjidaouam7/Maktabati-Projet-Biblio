@@ -7,7 +7,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+var connectionString = builder.Environment.IsProduction()
+    ? "Data Source=/tmp/biblio.db"
+    : builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=biblio.db";
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -47,7 +54,7 @@ builder.Services.AddSwaggerGen(options =>
 
 
 builder.Services.AddDbContext<BiblioDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(connectionString));
 
 builder.Services.AddIdentity<Utilisateur, IdentityRole>(options =>
 {
@@ -62,7 +69,7 @@ builder.Services.AddIdentity<Utilisateur, IdentityRole>(options =>
 
 
 
-var jwtCle = builder.Configuration["Jwt:Cle"]!;
+var jwtCle = builder.Configuration["Jwt:Cle"] ?? throw new InvalidOperationException("La clé JWT n'est pas configurée.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 
@@ -97,6 +104,10 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<BiblioDbContext>();
+
+    await dbContext.Database.MigrateAsync();
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Utilisateur>>();
 
@@ -109,7 +120,12 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    var adminEmail = "admin@biblio.com";
+    var adminEmail = builder.Configuration["Admin:Email"]
+    ?? throw new InvalidOperationException("L'email administrateur n'est pas configuré.");
+
+    var adminPassword = builder.Configuration["Admin:Password"]
+    ?? throw new InvalidOperationException("Le mot de passe administrateur n'est pas configuré.");
+
     var adminExistant = await userManager.FindByEmailAsync(adminEmail);
 
     if (adminExistant == null)
@@ -122,7 +138,14 @@ using (var scope = app.Services.CreateScope())
             Prenom = "Système"
         };
 
-        await userManager.CreateAsync(admin, "Admin123!");
+        var result = await userManager.CreateAsync(admin, adminPassword);
+
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Échec de création de l'administrateur : {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
+
         await userManager.AddToRoleAsync(admin, "Admin");
     }
 }
