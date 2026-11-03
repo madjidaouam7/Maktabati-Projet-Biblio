@@ -27,10 +27,13 @@
    ========================================= */
 
 .home-navbar {
-    position: relative;
-    z-index: 10;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     background: rgba(255, 253, 248, 0.96);
     border-bottom: 1px solid #eae6dc;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .navbar-content {

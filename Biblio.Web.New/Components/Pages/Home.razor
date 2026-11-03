@@ -151,9 +151,6 @@
         </div>
     </footer>
 
-</div>
-
-
 @if (showLoginModal)
 {
     <div class="login-backdrop" @onclick="CloseLoginModal" @onkeydown="HandleModalKeyDown" role="presentation"
@@ -215,6 +212,7 @@
         </section>
     </div>
 }
+</div>
 
 <RegisterModal IsOpen="@showRegisterModal" OnClose="@CloseRegisterModal" OnLoginClick="@SwitchToLogin" />
 @code {
