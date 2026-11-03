@@ -18,6 +18,15 @@ The application follows a layered architecture inspired by **Clean Architecture*
 
 The solution is developed with the .NET 8 ecosystem and is composed of an ASP.NET Core Web API, a domain layer, an application layer, an infrastructure layer and Blazor web interfaces.
 
+## 🌐 Live Demo
+
+The Maktabati application is available online:
+
+- **Web Application (Blazor)**: [https://maktabati-web.onrender.com/](https://maktabati-web.onrender.com/)
+- **REST API (ASP.NET Core)**: [https://maktabati-api-lf8x.onrender.com/](https://maktabati-api-lf8x.onrender.com/)
+
+> **Note:** The project is hosted on Render using free instances. Services may spin down after a period of inactivity, so the first access may take a few moments to load. The SQLite database uses temporary storage, meaning data may be reset after a restart or redeployment.
+
 ## ✨ Features
 
 ### Authentication and Authorization

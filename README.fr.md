@@ -18,6 +18,15 @@ Le projet repose sur une architecture en couches inspirée de **Clean Architectu
 
 La solution est développée avec l'écosystème .NET 8. Elle comprend une API ASP.NET Core Web API, une couche Domain, une couche Application, une couche Infrastructure et des interfaces web Blazor.
 
+## 🌐 Démonstration en ligne
+
+L'application Maktabati est disponible en ligne :
+
+- **Application Web (Blazor)** : [https://maktabati-web.onrender.com/](https://maktabati-web.onrender.com/)
+- **API REST (ASP.NET Core)** : [https://maktabati-api-lf8x.onrender.com/](https://maktabati-api-lf8x.onrender.com/)
+
+> **Remarque :** Le projet est hébergé sur Render avec des instances gratuites. Les services peuvent être mis en veille après une période d'inactivité. Le premier accès peut donc nécessiter quelques instants de chargement. La base de données SQLite étant temporaire, les données peuvent être réinitialisées lors d'un redémarrage ou d'un redéploiement.
+
 ## ✨ Fonctionnalités
 
 ### Authentification et autorisation
