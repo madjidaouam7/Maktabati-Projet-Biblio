@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Biblio.Api/Dockerfile
+    container_name: maktabati-api
+    ports:
+      - "5117:10000"
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      PORT: 10000
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Biblio.Web.New/Dockerfile
+    container_name: maktabati-web
+    ports:
+      - "5150:10000"
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      PORT: 10000
+      Api__BaseUrl: http://api:10000/
+    depends_on:
+      - api
+    restart: unless-stopped
